@@ -1,2 +1,0 @@
-# Dispute
-Ersatz peu scrupuleux
