@@ -20,25 +20,31 @@ def username_exist(username): #return bool
     return False
 
 def auth_user(username,passhash): #return bool
-    for row in cursor.execute("SELECT username,hash FROM user"):
-        print(row[0],row[1])
-        if(username == row[0] and passhash==row[1] ):
-            return True
-    return False
+    request = """ SELECT count(*) FROM user WHERE username = (?) AND hash = (?); """
+    data_tuple = (username, passhash)
+    cursor.execute(request,data_tuple)
+    rep = cursor.fetchone()
+    print(rep[0])
+    if(rep[0] == 1):
+        return True
+    else :
+        return False
+    
 
 def create_user(username,passhash):
     cursor.execute("SELECT max(user_id) FROM user")
-    print(cursor)
-    for row in cursor.fetchall():
-        print(type(row))
-        print("yo : "+str(row))
-    result = cursor.fetchmany(2)
-    print(result)
-    #cursor.execute("INSERT INTO user(user_id, username, hash) VALUES (?,?,?)",(cursor["user_id"],username,passhash))
+    mama = cursor.fetchone()
+
+    sqlite_insert_with_param = """INSERT INTO user(user_id, username, hash) VALUES (?, ?, ?);""" #https://pynative.com/python-sqlite-insert-into-table/
+
+    data_tuple = (mama[0]+1, username, passhash)
+    cursor.execute(sqlite_insert_with_param, data_tuple)
 
 def all_user():
     for row in cursor.execute("SELECT * FROM user"):
-        print(row)
+        print("allez les bleus : ",row)
 
 create_user("mama","mdp")
-#all_user()
+all_user()
+print(auth_user("mama","mdp"))
+
