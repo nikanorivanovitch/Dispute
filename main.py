@@ -1,9 +1,18 @@
 from flask import Flask, render_template
-import sqlite3
 import hashlib
 import populate_sqlite3 as db
+import uuid
 
 app = Flask(__name__, template_folder='templates')
+
+# DO IT IN FRONT, DO NOT COMMUNICATE CLEAR PASSWORD TO SERVER
+def hashText(text): #create a hash password from user clear password, src :https://gist.github.com/markito/30a9bc2afbbfd684b31986c2de305d20
+    """
+        Basic hashing function for a text using random unique salt.  
+    """
+    salt = uuid.uuid4().hex
+    print(salt)
+    return hashlib.sha256(salt.encode() + text.encode()).hexdigest() + ':' + salt
 
 #PAGE D'ACCUEIL
 @app.route('/')
@@ -26,13 +35,7 @@ def URL_login():
 def URL_register():
     if request.method == 'POST':
         username = request.form['username']
-        password = request.form['password']
-        key = hashlib.pbkdf2_hmac( #mots de pass hash
-            'sha256', # The hash digest algorithm for HMAC
-            password.encode('utf-8'), # Convert the password to bytes
-            salt, # Provide the salt
-            100000 # It is recommended to use at least 100,000 iterations of SHA-256 
-        )
+        password = request.form['password'] #already hash in client
         db.auth_user(username,password)
         
    
