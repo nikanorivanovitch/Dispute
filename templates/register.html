@@ -1,0 +1,80 @@
+<html>
+    <body>
+        <form action = "/register" id="RegisterForm" name="RegisterForm" onsubmit="return ValidateFormRegister()" method = "POST">
+            
+            <p><h3>Inscription</h3></p>
+
+            <p id="LabelPseudonyme">Pseudonyme</p>
+            <p><input type = 'text' name = 'username' required/></p>
+
+            <p id="LabelEmail">Adresse mail</p>
+            <p><input type = 'text' name = 'email' required/></p>
+
+            <p id="LabelPassword">Mot de passe</p>
+            <p><input type = 'password' name = 'password' required/></p>
+
+            <p id="LabelPasswordc">Confirmation du mot de passe</p>
+            <p><input type = 'password' name = 'passwordc' required/></p>
+
+            <p><input type = 'submit' value = 'Register'/></p>
+        </form>
+
+   </body>
+
+</html>
+
+<script type="text/javascript">
+
+    document.getElementById('RegisterForm').onsubmit = function() {
+        return ValidateFormRegister();
+    };
+
+    function ValidateEmail(email) {
+    const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        return re.test(String(email).toLowerCase());
+    }
+    
+    function ValidateFormRegister() {
+
+        let x = true;
+
+        document.getElementById("LabelPseudonyme").textContent = "Pseudonyme";
+        document.getElementById("LabelPseudonyme").style.color = "black";
+
+        document.getElementById("LabelEmail").textContent = "Adresse mail";
+        document.getElementById("LabelEmail").style.color = "black";
+
+        document.getElementById("LabelPassword").textContent = "Mot de passe";
+        document.getElementById("LabelPassword").style.color = "black";
+
+        document.getElementById("LabelPasswordc").textContent = "Confirmation du mot de passe";
+        document.getElementById("LabelPasswordc").style.color = "black";
+
+        if (document.forms["RegisterForm"]["username"].value == "") {
+            document.getElementById("LabelPseudonyme").textContent = "Pseudonyme (invalide)";
+            document.getElementById("LabelPseudonyme").style.color = "red";
+            x = false;
+        }
+
+        if (document.forms["RegisterForm"]["email"].value == "" || !ValidateEmail(document.forms["RegisterForm"]["email"].value)) {
+            document.getElementById("LabelEmail").textContent = "Adresse mail (invalide)";
+            document.getElementById("LabelEmail").style.color = "red";
+            x = false;
+        }
+
+        if (document.forms["RegisterForm"]["password"].value != document.forms["RegisterForm"]["passwordc"].value){
+            document.getElementById("LabelPassword").textContent = "Mot de passe (incohérent)";
+            document.getElementById("LabelPassword").style.color = "red";
+
+            document.getElementById("LabelPasswordc").textContent = "Confirmation du mot de passe (incohérent)";
+            document.getElementById("LabelPasswordc").style.color = "red";
+            x = false;
+        }
+
+        console.log(x);
+
+        return x;
+    }
+
+</script>
+
