@@ -1,5 +1,17 @@
 <html>
    <body>
       <p>Hello {{attributes["username"]}} !</p>
+
+      <form action = "/create_server" id="ServerCreationForm" name="ServerCreationForm" onsubmit="return ValidateFormRegister()" method = "POST">
+            
+            <p><h3>Créer un serveur</h3></p>
+
+            <p id="LabelServername">Nom du serveur</p>
+            <p><input type = 'text' name = 'servername' required/></p>
+
+            <p><input type = 'submit' value = 'Créer le serveur'/></p>
+
+        </form>
+
    </body>
 </html>

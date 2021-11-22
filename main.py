@@ -9,6 +9,12 @@ app = Flask(__name__, template_folder='templates')
 @app.route('/')
 def URL_root():
     print(__file__)
+
+    if('token' in session):
+        if(sh.IsValidSession(session['token'])):
+
+            return redirect('/home')
+
     return render_template('root.html')
 
 #PAGE DE CONNEXION
@@ -24,19 +30,19 @@ def URL_login():
 
         user = db.DoesThisUserExist(user)
 
-        print("LOGIN",user)
+        print('LOGIN',user)
 
         if(user):
-            session["username"] = user.name
-            session["token"] = sh.OpenSession(user)
+            session['username'] = user.name
+            session['token'] = sh.OpenSession(user)
             return redirect('/home')
 
         return redirect('/login')
 
     if(request.method == 'GET'):
 
-        if("token" in session):
-            if(sh.IsValidSession(session["token"])):
+        if('token' in session):
+            if(sh.IsValidSession(session['token'])):
                 return redirect('/home')
         
         resp = make_response(render_template('login.html'))
@@ -83,7 +89,24 @@ def URL_home():
 
             return render_template('home.html', attributes=attributes)
 
-    return render_template("root.html")
+    return redirect('/')
+
+@app.route('/create_server', methods=['POST'])
+def URL_create_server():
+
+    if(request.method == 'POST'):
+        if("token" in session):
+            if(sh.IsValidSession(session["token"])):
+
+                server = Server()
+                server.name = request.form['servername']
+                server.creator = sh.Sessions[session['token']]
+
+                server = db.CreateServer(server)
+
+    return redirect('/home')
+
+    pass
 
 if __name__ == "__main__":
 
