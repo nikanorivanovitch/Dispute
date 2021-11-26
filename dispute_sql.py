@@ -268,6 +268,8 @@ class DatabaseHandler:
 
     def RemoveFriendShip():
 
+        pass
+
     def DoesFriendShipExists():
 
         request = "SELECT * FROM friendship WHERE friend1_id = (?) AND friend2_id = (?);"
