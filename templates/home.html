@@ -1,17 +1,26 @@
 <html>
-   <body>
-      <p>Hello {{attributes["username"]}} !</p>
+	<body>
 
-      <form action = "/create_server" id="ServerCreationForm" name="ServerCreationForm" onsubmit="return ValidateFormRegister()" method = "POST">
+		<div>
+			<p>Hello {{attributes["username"]}} !</p>
+		</div>
+
+		<div>
+			<form action = "/create_server" id="ServerCreationForm" name="ServerCreationForm" onsubmit="return ValidateFormRegister()" method = "POST">
             
-            <p><h3>Créer un serveur</h3></p>
+        		<p><h3>Créer un serveur</h3></p>
 
-            <p id="LabelServername">Nom du serveur</p>
-            <p><input type = 'text' name = 'servername' required/></p>
+        		<p id="LabelServername">Nom du serveur</p>
+        		<p><input type = 'text' name = 'servername' required/></p>
 
-            <p><input type = 'submit' value = 'Créer le serveur'/></p>
+        		<p><input type = 'submit' value = 'Créer le serveur'/></p>
 
-        </form>
+    		</form>
+		</div>
 
-   </body>
+		<div>
+			
+		</div>
+
+	</body>
 </html>

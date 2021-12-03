@@ -65,6 +65,7 @@ class User:
         self.name=None
         self.hash=None
         self.email=None
+        self.discriminant=None
 
 class Server:
 
@@ -156,10 +157,12 @@ class DatabaseHandler:
         if(not self.CanUserBeCreated(user)):
             return False
 
+        user.discriminant = random.randint(1,9999)
+
         print("user to add : ",user.__dict__)
 
-        request = "INSERT INTO user(user_id, user_name, user_hash,  user_email) VALUES (?, ?, ?, ?);"
-        self.cursor.execute(request, (user.id, user.name, sha256(str(user.hash)+str(user.email)+str("CecientEstMon__Secret56SAGIPognonDedingue")), user.email))
+        request = "INSERT INTO user(user_id, user_name, user_hash,  user_email, user_discriminant) VALUES (?, ?, ?, ?, ?);"
+        self.cursor.execute(request, (user.id, user.name, sha256(str(user.hash)+str(user.email)+str("CecientEstMon__Secret56SAGIPognonDedingue")), user.email, user.discriminant))
 
         user.id = self.GetIncrementOfTable("user")
 
@@ -192,6 +195,15 @@ class DatabaseHandler:
 
         request = "SELECT * FROM user WHERE user_id = (?);"
         self.cursor.execute(request, (sql_hash))
+
+        result = self.cursor.fetchall()
+
+        if(len(result)==0):
+            return None
+        if(len(result)>1):
+            print("DATABASE ERROR : Il existe plusieurs utilisateurs d'ID " + str(user_id))
+        else:
+            return result[0]
 
     ###########
     # Serveur #
@@ -263,14 +275,16 @@ class DatabaseHandler:
 
     def AddFriendShip(user1_id, user2_id):
 
-        request = "INSERT INTO friendship() VALUES (?, ?);"
+        request = "INSERT INTO friendship(friend1_id, friend2_id) VALUES (?, ?);"
         self.cursor.execute(request, (user1_id, user2_id))
 
-    def RemoveFriendShip():
+    def RemoveFriendship(remover_id, removed_id):
 
-        pass
+        request = "DELETE FROM friendship WHERE friend1_id = (?) and friend2_id = (?);"
+        self.cursor.execute(request, (remover_id, removed_id))
+        self.cursor.execute(request, (removed_id, remover_id))
 
-    def DoesFriendShipExists():
+    def DoesFriendShipExists(friend1_id, friend2_id):
 
         request = "SELECT * FROM friendship WHERE friend1_id = (?) AND friend2_id = (?);"
         
@@ -281,6 +295,28 @@ class DatabaseHandler:
             return 2
 
         return False
+
+    def DoesFriendshipRequestExists(sender_id, receiver_id):
+
+        request = "SELECT * FROM pending_friend_request WHERE sender_id = (?) AND receiver_id = (?);"
+
+        if(len(self.cursor.execute(request, (sender_id, receiver_id)).fetchall())==1):
+            return 1
+
+        if(len(self.cursor.execute(request, (receiver_id, sender_id)).fetchall())==1):
+            return 2
+
+        return False
+
+    def AddFriendshipRequest(user_sender_id, user_receiver_id):
+
+        if(not DoesFriendshipExists(user_sender_id, user_receiver_id)):
+
+            request = "INSERT INTO pending_friend_request(sender_id, receiver_id) VALUES (?,?);"
+
+            self.cursor.execute(request, (user_sender_id, user_receiver_id))
+
+
 
 
 

@@ -80,10 +80,10 @@ def URL_home():
     print("token" in session)
 
     if("token" in session):
-        if(sh.IsValidSession(session["token"])):
+        if(sh.IsValidSession(session['token'])):
 
             attributes = {}
-            user = sh.Sessions[session["token"]]
+            user = sh.Sessions[session['token']]
 
             attributes["username"] = user.name
 
@@ -96,7 +96,7 @@ def URL_create_server():
 
     if(request.method == 'POST'):
         if("token" in session):
-            if(sh.IsValidSession(session["token"])):
+            if(sh.IsValidSession(session['token'])):
 
                 server = Server()
                 server.name = request.form['servername']
@@ -107,6 +107,29 @@ def URL_create_server():
     return redirect('/home')
 
     pass
+
+@app.route('/addfriend', methods=['POST'])
+def URL_addfriend():
+
+    if(request.method == 'POST'):
+        if("token" in session):
+            if(sh.IsValidSession(session['token'])):
+
+                if(db.GetUserFromId(request.form['friend_id'])):
+                    db.AddFriendshipRequest(session['token'].id, request.form['friend_id'])
+
+@app.route('/removefriend', methods=['POST'])
+def URL_removefriend():
+
+    if(request.method == 'POST'):
+        if("token" in session):
+            if(sh.IsValidSession(session['token'])):
+
+                if(db.GetUserFromId(request.form['friend_id'])):
+                    db.RemoveFriendship(sh.Sessions[session['token']].id, request.form['friend_id'])
+
+
+
 
 if __name__ == "__main__":
 
