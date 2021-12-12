@@ -3,6 +3,7 @@ from dispute_sql import *
 O = DatabaseHandler("database.db")
 O.GetEntireTable("user")
 #O.ResetEntireDatabase()
+
 O.GetEntireTable("user")
 print("GNEUGNEU")
 
@@ -26,6 +27,12 @@ U3.hash = sha256("lea")
 U3.email = "lea@lea"
 
 U3 = O.CreateUser(U3)
+
+print(U1.id)
+print(U2.id)
+
+O.AddFriendShip(U1.id, U2.id)
+O.AddFriendShip(U1.id, U3.id)
 
 O.GetEntireTable("user")
 

@@ -3,6 +3,7 @@
 
 		<div>
 			<p>Hello {{attributes["username"]}} !</p>
+            <img src={{"http://localhost:5000/file/" + attributes["userpicturetoken"]}}>
 		</div>
 
 		<div>
@@ -19,8 +20,28 @@
 		</div>
 
 		<div>
-			
+            <p><h3>Mes serveurs : </h3></p>
+
+            {% for server in attributes["servers"] %}
+                <li>{{ server["name"] }}</li>
+            {% endfor %}
 		</div>
+
+        <div>
+            <p><h3>Mes amis : </h3></p>
+
+            {% for friend in attributes["friends"] %}
+                <li>{{ friend["name"] }}</li>
+            {% endfor %}
+        </div>
+
+        <div>
+            <form action="/change_profilepicture" method="post" enctype="multipart/form-data">
+                <h3> Select image to upload: </h3>
+                <input type="file" name="profil_picture" id="profil_picture">
+                <input type="submit" value="Upload Image" name="submit">
+            </form>
+        </div>
 
 	</body>
 </html>

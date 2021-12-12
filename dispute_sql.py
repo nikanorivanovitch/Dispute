@@ -14,9 +14,46 @@ def NewToken():
 
     return sha256(out)
 
+def NewFileToken():
+
+    out = ""
+
+    for x in range(64):
+
+        i = (random.randint(0,50))
+
+        if(i<25):
+            out+=chr(ord('A')+i)
+        else:
+            out+=chr(ord('a')+i-25)
+
+    return out
+
 def sha256(input):
 
     return hashlib.sha256(input.encode()).hexdigest()
+
+def allowed_extension(path, allowed_extensions):
+
+    for extension in allowed_extensions:
+
+        if(path.endswith(extension)):
+
+            return True
+
+    return False
+
+def extension_of(path, allowed_extensions):
+
+    for extension in allowed_extensions:
+
+        if(path.endswith(extension)):
+
+            return '.' + extension
+
+    return None
+
+
 
 
 # Objet qui va gérer les demandes d'amitié en temp réel
@@ -66,6 +103,7 @@ class User:
         self.hash=None
         self.email=None
         self.discriminant=None
+        self.picture_token='default-picture'
 
 class Server:
 
@@ -161,8 +199,8 @@ class DatabaseHandler:
 
         print("user to add : ",user.__dict__)
 
-        request = "INSERT INTO user(user_id, user_name, user_hash,  user_email, user_discriminant) VALUES (?, ?, ?, ?, ?);"
-        self.cursor.execute(request, (user.id, user.name, sha256(str(user.hash)+str(user.email)+str("CecientEstMon__Secret56SAGIPognonDedingue")), user.email, user.discriminant))
+        request = "INSERT INTO user(user_id, user_name, user_hash,  user_email, user_discriminant, user_picture_token) VALUES (?, ?, ?, ?, ?, ?);"
+        self.cursor.execute(request, (user.id, user.name, sha256(str(user.hash)+str(user.email)+str("CecientEstMon__Secret56SAGIPognonDedingue")), user.email, user.discriminant, user.picture_token))
 
         user.id = self.GetIncrementOfTable("user")
 
@@ -184,9 +222,13 @@ class DatabaseHandler:
         result = self.cursor.fetchall()
 
         if(len(result)==1):
+
+            print(result)
+
             result=result[0]
             user.id = result[0]
             user.name = result[1]
+            user.picture_token = result[5]
             return user
 
         return False
@@ -204,6 +246,36 @@ class DatabaseHandler:
             print("DATABASE ERROR : Il existe plusieurs utilisateurs d'ID " + str(user_id))
         else:
             return result[0]
+
+    def GetServersOfUser(self, user_id):
+
+        request = "SELECT * FROM server WHERE server_id IN (SELECT server_id FROM membership WHERE user_id = (?));"
+
+        result = self.cursor.execute(request, (user_id,)).fetchall()
+
+        print(result)
+
+        output = []
+
+        for line in result:
+            output.append({"name" : line[1], "image" : None})
+
+        return output
+
+    def GetFriendsOfUser(self, user_id):
+
+        request = "SELECT * FROM user WHERE user_id IN (SELECT friend1_id FROM friendship WHERE friend2_id = (?)) OR user_id IN (SELECT friend2_id FROM friendship WHERE friend1_id = (?));"
+
+        result = self.cursor.execute(request, (user_id,user_id)).fetchall()
+
+        print(result)
+
+        output = []
+
+        for line in result:
+            output.append({"name" : line[1], "image" : None})
+
+        return output
 
     ###########
     # Serveur #
@@ -273,18 +345,20 @@ class DatabaseHandler:
 
         return True
 
-    def AddFriendShip(user1_id, user2_id):
+    def AddFriendShip(self, user1_id, user2_id):
 
-        request = "INSERT INTO friendship(friend1_id, friend2_id) VALUES (?, ?);"
-        self.cursor.execute(request, (user1_id, user2_id))
+        if(user1_id!=user2_id):
 
-    def RemoveFriendship(remover_id, removed_id):
+            request = "INSERT INTO friendship(friend1_id, friend2_id) VALUES (?, ?);"
+            self.cursor.execute(request, (user1_id, user2_id))
+
+    def RemoveFriendship(self, remover_id, removed_id):
 
         request = "DELETE FROM friendship WHERE friend1_id = (?) and friend2_id = (?);"
         self.cursor.execute(request, (remover_id, removed_id))
         self.cursor.execute(request, (removed_id, remover_id))
 
-    def DoesFriendShipExists(friend1_id, friend2_id):
+    def DoesFriendShipExists(self, friend1_id, friend2_id):
 
         request = "SELECT * FROM friendship WHERE friend1_id = (?) AND friend2_id = (?);"
         
@@ -296,7 +370,7 @@ class DatabaseHandler:
 
         return False
 
-    def DoesFriendshipRequestExists(sender_id, receiver_id):
+    def DoesFriendshipRequestExists(self, sender_id, receiver_id):
 
         request = "SELECT * FROM pending_friend_request WHERE sender_id = (?) AND receiver_id = (?);"
 
@@ -308,7 +382,7 @@ class DatabaseHandler:
 
         return False
 
-    def AddFriendshipRequest(user_sender_id, user_receiver_id):
+    def AddFriendshipRequest(self, user_sender_id, user_receiver_id):
 
         if(not DoesFriendshipExists(user_sender_id, user_receiver_id)):
 
@@ -316,7 +390,36 @@ class DatabaseHandler:
 
             self.cursor.execute(request, (user_sender_id, user_receiver_id))
 
+    ###########
+    # Fichier #
+    ###########
 
+    def DoesTokenFileExists(self, FileToken):
+
+        request = "SELECT * FROM files WHERE file_token = (?);"
+
+        result = self.cursor.execute(request, (FileToken,)).fetchall()
+
+        if(len(result)==1):
+
+            return True
+
+        return False
+
+
+    def AddTokenFile(self, FileToken, FileExtension):
+
+        request = "INSERT INTO files(file_token, file_extension) VALUES (?, ?);"
+
+        self.cursor.execute(request, (FileToken,FileExtension))
+
+    def GetExtensionOfFileToken(self, FileToken):
+
+        request = "SELECT file_extension FROM files WHERE file_token = (?);"
+
+        result = self.cursor.execute(request, (FileToken,)).fetchall()
+
+        return result[0][0]
 
 
 
