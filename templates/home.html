@@ -1,5 +1,10 @@
 <html>
-	<body>
+    <head>
+        <script type="text/javascript" src="../static/js/socket.io.js"></script>
+        <script type="text/javascript" src="../static/js/SimplePeer.js"></script>
+        <script type="text/javascript" src="../static/js/app.js"></script>
+    </head>
+	<body onload=createServer()>
 
 		<div>
 			<p>Hello {{attributes["username"]}} !</p>
@@ -18,12 +23,15 @@
 
     		</form>
 		</div>
-
-		<div>
-            <p><h3>Mes serveurs : </h3></p>
-
+       
+        <p><h3>Mes serveurs : </h3></p>
+		<div id="Serveurs">
+           
             {% for server in attributes["servers"] %}
-                <li>{{ server["name"] }}</li>
+                <li> {{ server["name"] }}
+
+                </li>
+
             {% endfor %}
 		</div>
 

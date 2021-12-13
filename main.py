@@ -3,6 +3,7 @@ from werkzeug.utils import secure_filename
 import hashlib
 import uuid
 from dispute_sql import *
+from flask_socketio import SocketIO, send
 
 UPLOAD_FOLDER = "./files/"
 ALLOWED_EXTENSIONS = set(['png','jpg','jpeg','gif'])
@@ -204,10 +205,6 @@ def URL_file(FileToken):
     return 0
 
 
-
-
-
-
 if __name__ == "__main__":
 
     db = DatabaseHandler("database.db")
@@ -220,4 +217,5 @@ if __name__ == "__main__":
     app.secret_key = 'SecretBienGardéIsseMesBonsSeigneurs'
     app.config['SESSION_TYPE'] = 'filesystem'
     app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-    app.run()
+    SOCKET_IO = SocketIO(app)  # turn the flask app into a socketio app
+    SOCKET_IO.run(app, debug=True, port=5000, host='0.0.0.0')
