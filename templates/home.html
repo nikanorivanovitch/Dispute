@@ -1,12 +1,11 @@
 <html>
     <head>
-        <script type="text/javascript" src="../static/js/socket.io.js"></script>
-        <script type="text/javascript" src="../static/js/SimplePeer.js"></script>
-        <script type="text/javascript" src="../static/js/app.js"></script>
+
     </head>
 	<body onload=createServer()>
 
 		<div>
+            <P>{{attributes}}</P>
 			<p>Hello {{attributes["username"]}} !</p>
             <img src={{"http://localhost:5000/file/" + attributes["userpicturetoken"]}}>
 		</div>
@@ -26,21 +25,10 @@
        
         <p><h3>Mes serveurs : </h3></p>
 		<div id="Serveurs">
-           
-            {% for server in attributes["servers"] %}
-                <li> {{ server["name"] }}
-
-                </li>
-
-            {% endfor %}
 		</div>
 
-        <div>
-            <p><h3>Mes amis : </h3></p>
-
-            {% for friend in attributes["friends"] %}
-                <li>{{ friend["name"] }}</li>
-            {% endfor %}
+        <p><h3>Mes amis : </h3></p>
+        <div id="Amis">
         </div>
 
         <div>
@@ -52,4 +40,11 @@
         </div>
 
 	</body>
+    <script type="text/javascript">
+        None = null // Si dans un attributes, un objet est none il devient null (parce que JS ne veut pas de none)
+        var attributes = {{ attributes | safe }};
+    </script>
+    <script type="text/javascript" src="../static/js/socket.io.js"></script>
+    <script type="text/javascript" src="../static/js/SimplePeer.js"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/app.js') }}"></script>
 </html>
