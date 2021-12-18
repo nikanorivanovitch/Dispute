@@ -1,12 +1,26 @@
-<html>
-   <body>
-      <form action = "/login" method = "POST">
-         <p><h3>Connexion</h3></p>
-         <p>Adresse mail</p>
-         <p><input type = 'text' name = 'email'/></p>
-         <p>Mot de passe</p>
-         <p><input type = 'password' name = 'password'/></p>
-         <p><input type = 'submit' value = 'Connexion'/></p>
-      </form>
-   </body>
+<!DOCTYPE html> 
+<html Lang="fr"> 
+<head> 
+   <meta charset="UTF-8"> 
+   <meta http-equiv="X-UA-Compatible content="IE=edge> 
+   <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+   <link rel="stylesheet" href="../static/css/login.css"> 
+   <title>Dispute Login</title> 
+</head> 
+<body> 
+   <div class="contianer"> 
+      <div class="bg-img"></div> 
+      <div class="content"> 
+         <form action = "/login" method = "POST"> 
+            <div> 
+               <input type="email" name='email' placeholder="Email"> 
+               <input type="password" name='password' placeholder="Password">
+            </div> 
+            <button>Connexion</button> 
+         </form> 
+         <p>Vous n'avez pas encore de compte ? <a href="/register.html">Créez-en un !</a></p> 
+         <img src="../static/images/logo.png" width="100" align="center"> 
+      </div> 
+   </div> 
+</body> 
 </html>
