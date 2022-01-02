@@ -121,6 +121,7 @@ class Channel:
         self.id=None
         self.name=None
         self.users=None
+        self.server_id=None
 
 class Message:
 
@@ -128,7 +129,7 @@ class Message:
 
         self.id=None
         self.content=None
-        self.sender=None
+        self.sender_id=None
         self.channel_id=None
 
         pass
@@ -258,7 +259,21 @@ class DatabaseHandler:
         output = []
 
         for line in result:
-            output.append({"name" : line[1], "image" : None})
+
+            channel_dictionnary = self.GetChannelsOfServer(line[0]) 
+            output.append({"name" : line[1], "image" : None, "channels" : channel_dictionnary})
+
+        return output
+
+    def GetChannelsOfServer(self, server_id):
+
+        request = "SELECT *  FROM channel WHERE channel_server_id = (?);"
+        result = self.cursor.execute(request, (server_id,)).fetchall()
+
+        output = []
+
+        for line in result:
+            output.append({"name" : line[1]})
 
         return output
 
@@ -308,11 +323,19 @@ class DatabaseHandler:
 
     def CreateChannel(self, channel):
 
-        pass
+        request = "INSERT INTO channel(channel_id, channel_name, channel_server_id) VALUES (?, ?, ?);"
+        self.cursor.execute(request, (channel.id, channel.name, channel.server_id))
+
+        channel.id = self.GetIncrementOfTable("channel")
+
+        return channel 
 
     def RenameChannel(self, channel):
 
-        pass
+        request = "UPDATE channel SET channel_name = (?) WHERE channel_id = (?);"
+        self.cursor.execute(request, (channel.name, channel.id))
+
+        return channel
 
     ###########
     # Message #
@@ -320,11 +343,19 @@ class DatabaseHandler:
 
     def CreateMessage(self, message):
 
+        request = "INSERT INTO message(message_id, message_writer_id, message_content, message_channel_id) VALUES (?, ?, ?, ?);"
+        self.cursor.execute(request, (message.id, message.sender_id, message.content, message.channel_id))
+
+        message.id = self.GetIncrementOfTable("message")
+
         pass
 
     def UpdateMessage(self, message):
 
-        pass
+        request = "UPDATE message SET message_content = (?) WHERE message_id = (?);"
+        self.cursor.execute(request, (message.content, message.id))
+
+        return message
 
     #############
     # Connexion #

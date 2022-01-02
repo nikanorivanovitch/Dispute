@@ -112,8 +112,23 @@ def URL_create_server():
 
                 server = db.CreateServer(server)
 
+                main_channel = Channel()
+                main_channel.name = "général"
+                main_channel.server_id = server.id
+
+                main_channel = db.CreateChannel(main_channel)
+
     return redirect('/home')
 
+    pass
+
+def URL_remove_server():
+    pass
+
+def URL_create_channel():
+    pass
+
+def URL_remove_channel():
     pass
 
 @app.route('/request_addfriend', methods=['POST'])

@@ -2,7 +2,7 @@ from dispute_sql import *
 
 O = DatabaseHandler("database.db")
 O.GetEntireTable("user")
-O.ResetEntireDatabase()
+#O.ResetEntireDatabase()
 O.GetEntireTable("user")
 print("GNEUGNEU")
 

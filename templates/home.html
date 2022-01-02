@@ -23,7 +23,18 @@
             <p><h3>Mes serveurs : </h3></p>
 
             {% for server in attributes["servers"] %}
-                <li>{{ server["name"] }}</li>
+                <div>
+                    <li>{{ server["name"] }}</li>
+
+                    {% for channel in server["channels"] %}
+
+                        <div>
+                            <h4>{{ channel["name"] }}</h4>
+                        </div>
+
+                    {% endfor %}
+
+                </div>
             {% endfor %}
 		</div>
 
