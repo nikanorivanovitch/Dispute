@@ -317,6 +317,28 @@ class DatabaseHandler:
 
         return server
 
+    def RemoveServer(self, server_id, user):
+
+        if(self.IsUserServerAdmin(server_id, user)):
+
+            request = "DELETE FROM server WHERE server_id = (?);"
+            self.cursor.execute(request, (server_id,))
+
+            return True
+
+        return False
+
+    def IsUserServerAdmin(self, server_id, user):
+
+        request = "SELECT * FROM server WHERE server_id = (?) AND server_creator_id = (?);"
+        result = self.cursor.execute(request, (server_id, user.id)).fetchall()
+
+        if(len(result)==1):
+            return True
+
+        return False
+
+
     ###########
     # Channel #
     ###########
@@ -336,6 +358,17 @@ class DatabaseHandler:
         self.cursor.execute(request, (channel.name, channel.id))
 
         return channel
+
+    def RemoveChannel(self, channel_id, user):
+
+        request = "SELECT * FROM channel WHERE channel_id = (?);"
+        result = self.cursor.execute(request, (channel_id,))
+
+        if(len(result)==1):
+
+            pass
+
+        return False
 
     ###########
     # Message #

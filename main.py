@@ -122,13 +122,34 @@ def URL_create_server():
 
     pass
 
+@app.route('/remove_server', methods=['POST'])
 def URL_remove_server():
+
+    if(request.method == 'POST'):
+        if("token" in session):
+            if(sh.IsValidSession(session['token'])):
+
+                server_id = request.form['server_id']
+                user = sh.Sessions[session['token']]
+
+                db.RemoveServer(server_id, user)
+
+    return redirect('/home')
+
     pass
 
+@app.route('/create_channel', methods=['POST'])
 def URL_create_channel():
+
+    return redirect('/home')
+
     pass
 
+@app.route('/remove_channel',methods=['POST'])
 def URL_remove_channel():
+
+    return redirect('/home')
+
     pass
 
 @app.route('/request_addfriend', methods=['POST'])
