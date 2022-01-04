@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS channel(
 
 CREATE TABLE IF NOT EXISTS message(
                                     message_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                    message_timestamp INTEGER NOT NULL,
                                     message_sender_id INT NOT NULL,
                                     message_content TEXT,
                                     message_channel_id INT NOT NULL

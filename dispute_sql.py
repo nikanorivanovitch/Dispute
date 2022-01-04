@@ -261,7 +261,7 @@ class DatabaseHandler:
         for line in result:
 
             channel_dictionnary = self.GetChannelsOfServer(line[0]) 
-            output.append({"name" : line[1], "image" : None, "channels" : channel_dictionnary})
+            output.append({"id" : line[0], "name" : line[1], "image" : None, "channels" : channel_dictionnary})
 
         return output
 
@@ -273,7 +273,7 @@ class DatabaseHandler:
         output = []
 
         for line in result:
-            output.append({"name" : line[1]})
+            output.append({"id" : line[0], "name" : line[1]})
 
         return output
 
@@ -317,18 +317,20 @@ class DatabaseHandler:
 
         return server
 
-    def RemoveServer(self, server_id, user):
+    def RemoveServer(self, server_id):
 
-        if(self.IsUserServerAdmin(server_id, user)):
+        request = "DELETE FROM server WHERE server_id = (?);"
+        self.cursor.execute(request, (server_id,))
 
-            request = "DELETE FROM server WHERE server_id = (?);"
-            self.cursor.execute(request, (server_id,))
+        request = "DELETE FROM channel WHERE channel_server_id = (?);"
+        self.cursor.execute(request, (server_id,))
 
-            return True
+        request = "DELETE FROM message WHERE message_channel_id IN (SELECT channel_id FROM channel WHERE channel_server_id = (?));"
+        self.cursor.execute(request, (server_id,))
 
-        return False
+        return True
 
-    def IsUserServerAdmin(self, server_id, user):
+    def IsServerAdmin(self, server_id, user):
 
         request = "SELECT * FROM server WHERE server_id = (?) AND server_creator_id = (?);"
         result = self.cursor.execute(request, (server_id, user.id)).fetchall()
@@ -359,16 +361,12 @@ class DatabaseHandler:
 
         return channel
 
-    def RemoveChannel(self, channel_id, user):
+    def RemoveChannel(self, channel_id):
 
-        request = "SELECT * FROM channel WHERE channel_id = (?);"
-        result = self.cursor.execute(request, (channel_id,))
+        request = "DELETE FROM channel WHERE channel_id = (?);"
+        self.cursor.execute(request, (channel_id,))
 
-        if(len(result)==1):
-
-            pass
-
-        return False
+        return True
 
     ###########
     # Message #
@@ -389,6 +387,16 @@ class DatabaseHandler:
         self.cursor.execute(request, (message.content, message.id))
 
         return message
+
+    def IsChannelAdmin(self, channel_id, user):
+
+        request = "SELECT * FROM channel WHERE channel_id = (?) AND channel_server_id IN (SELECT server_id FROM server WHERE server_creator_id = (?));"
+        result = self.cursor.execute(request, (channel_id, user.id)).fetchall()
+
+        if(len(result)==1):
+            return True
+
+        return False
 
     #############
     # Connexion #

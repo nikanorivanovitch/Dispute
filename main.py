@@ -122,6 +122,26 @@ def URL_create_server():
 
     pass
 
+@app.route('/rename_server', methods=['POST'])
+def URL_rename_server():
+
+    if(request.method == 'POST'):
+        if("token" in session):
+            if(sh.IsValidSession(session['token'])):
+
+                server = Server()
+                server.id = request.form['server_id']
+                server.name = request.form['server_name']
+                server.creator = sh.Sessions[session['token']]
+                user = sh.Sessions[session['token']]
+
+                if(db.IsServerAdmin(server.id, user)):
+                    server = db.RenameServer(server)
+
+    return redirect('/home')
+
+    pass
+
 @app.route('/remove_server', methods=['POST'])
 def URL_remove_server():
 
@@ -132,7 +152,8 @@ def URL_remove_server():
                 server_id = request.form['server_id']
                 user = sh.Sessions[session['token']]
 
-                db.RemoveServer(server_id, user)
+                if(db.IsServerAdmin(server_id, user)):
+                    db.RemoveServer(server_id)
 
     return redirect('/home')
 
@@ -141,12 +162,54 @@ def URL_remove_server():
 @app.route('/create_channel', methods=['POST'])
 def URL_create_channel():
 
+    if(request.method == 'POST'):
+        if("token" in session):
+            if(sh.IsValidSession(session['token'])):
+
+                channel = Channel()
+                channel.server_id = request.form['server_id']
+                channel.name = request.form['channel_name']
+                user = sh.Sessions[session['token']]
+
+                if(db.IsServerAdmin(channel.server_id, user)):
+                    db.CreateChannel(channel)
+
+    return redirect('/home')
+
+    pass
+
+@app.route('/rename_channel',methods=['POST'])
+def URL_rename_channel():
+
+    if(request.method == 'POST'):
+        if("token" in session):
+            if(sh.IsValidSession(session['token'])):
+
+                channel = Channel()
+                channel.id = request.form['channel_id']
+                channel.name = request.form['channel_name']
+                user = sh.Sessions[session['token']]
+
+                if(db.IsChannelAdmin(channel.id, user)):
+                    db.RenameChannel(channel)
+
     return redirect('/home')
 
     pass
 
 @app.route('/remove_channel',methods=['POST'])
 def URL_remove_channel():
+
+    if(request.method == 'POST'):
+        if("token" in session):
+            if(sh.IsValidSession(session['token'])):
+
+                server_id = request.form['server_id']
+                channel_id = request.form['channel_id']
+                user = sh.Sessions[session['token']]
+
+                if(db.IsChannelAdmin(channel_id, user)):
+                    db.RemoveChannel(channel_id)
 
     return redirect('/home')
 

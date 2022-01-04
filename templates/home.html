@@ -1,4 +1,8 @@
 <html>
+    <head>
+        <link rel="stylesheet" href="../static/css/home.css">
+    </head>
+
 	<body>
 
 		<div>
@@ -19,17 +23,80 @@
     		</form>
 		</div>
 
-		<div>
+		<div class="dev">
             <p><h3>Mes serveurs : </h3></p>
 
             {% for server in attributes["servers"] %}
                 <div>
-                    <li>{{ server["name"] }}</li>
+                    <h3>+S{{ server["name"] }}<h3>
+
+                    <!-- Formulaire de renommage du serveur -->
+                    <div>
+                        <form action = "/rename_server" id="ServerRenameForm" name="ServerRenameForm" onsubmit="return ValidateFormRegister()" method = "POST">
+        
+                        <p id="LabelNewServername">Nouveau nom du serveur</p>
+
+                        <p><input type = 'hidden' name = 'server_id' value = {{ server["id"] }}></p>
+
+                        <p><input type = 'text' name = 'server_name' required/></p>
+        
+                        <p><input type = 'submit' value = 'Renommer le serveur'/></p>
+
+                        </form>
+                    </div>
+
+                    <!-- Formulaire de suppression du serveur -->
+                    <div>
+                        <form action = "/remove_server" id="ServerDeletionForm" name="ServerDeletionForm" onsubmit="return ValidateFormRegister()" method = "POST">
+
+                        <p><input type = 'hidden' name = 'server_id' value = {{ server["id"] }}></p>
+        
+                        <p><input type = 'submit' value = 'Supprimer le serveur'/></p>
+
+                        </form>
+                    </div>
+
+                    <!-- Formulaire de création d'un canal -->
+                    <div>
+                        <form action = "/create_channel" id="ChannelCreationForm" name="ChannelCreationForm" onsubmit="return ValidateFormRegister()" method = "POST">
+        
+                        <p id="LabelServername">Nom du canal</p>
+
+                        <p><input type = 'hidden' name = 'server_id' value = {{ server["id"] }}></p>
+
+                        <p><input type = 'text' name = 'channel_name' required/></p>
+        
+                        <p><input type = 'submit' value = 'Créer le canal'/></p>
+
+                        </form>
+                    </div>
 
                     {% for channel in server["channels"] %}
 
                         <div>
-                            <h4>{{ channel["name"] }}</h4>
+                            <h4>+C {{ channel["name"] }}</h4>
+                        </div>
+
+                        <div>
+                            <form action = "/rename_channel" id="ChannelRenameForm" name="ChannelRenameForm" on submit="return ValidateFormRegister()" method = "POST">
+    
+                            <p><input type = 'hidden' name = 'channel_id' value = {{ channel["id"] }}></p>
+    
+                            <p><input type = 'text' name = 'channel_name' required/></p>
+            
+                            <p><input type = 'submit' value = 'Renommer le canal'/></p>
+    
+                            </form>
+                        </div>
+
+                        <div>
+                            <form action = "/remove_channel" id="ChannelDeletionForm" name="ChannelDeletionForm" on submit="return ValidateFormRegister()" method = "POST">
+    
+                            <p><input type = 'hidden' name = 'channel_id' value = {{ channel["id"] }}></p>
+            
+                            <p><input type = 'submit' value = 'Supprimer le canal'/></p>
+    
+                            </form>
                         </div>
 
                     {% endfor %}
@@ -48,9 +115,13 @@
 
         <div>
             <form action="/change_profilepicture" method="post" enctype="multipart/form-data">
+
                 <h3> Select image to upload: </h3>
+
                 <input type="file" name="profil_picture" id="profil_picture">
+
                 <input type="submit" value="Upload Image" name="submit">
+
             </form>
         </div>
 
