@@ -178,7 +178,7 @@ def URL_create_channel():
 
     pass
 
-@app.route('/rename_channel',methods=['POST'])
+@app.route('/rename_channel', methods=['POST'])
 def URL_rename_channel():
 
     if(request.method == 'POST'):
@@ -197,14 +197,14 @@ def URL_rename_channel():
 
     pass
 
-@app.route('/remove_channel',methods=['POST'])
+@app.route('/remove_channel', methods=['POST'])
 def URL_remove_channel():
 
+    print("COUCOU")
     if(request.method == 'POST'):
         if("token" in session):
             if(sh.IsValidSession(session['token'])):
 
-                server_id = request.form['server_id']
                 channel_id = request.form['channel_id']
                 user = sh.Sessions[session['token']]
 
