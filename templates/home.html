@@ -7,7 +7,7 @@
 
 		<div>
 			<p>Hello {{attributes["username"]}} !</p>
-            <img src={{"http://localhost:5000/file/" + attributes["userpicturetoken"]}}>
+            <img src={{"http://localhost:5000/file/" + attributes["userpicturetoken"]}} class="profil_picture_small">
 		</div>
 
 		<div>
@@ -27,11 +27,11 @@
             <p><h3>Mes serveurs : </h3></p>
 
             {% for server in attributes["servers"] %}
-                <div>
+                <div class="dev">
                     <h3>+S{{ server["name"] }}<h3>
 
                     <!-- Formulaire de renommage du serveur -->
-                    <div>
+                    <div class="dev">
                         <form action = "/rename_server" id="ServerRenameForm" name="ServerRenameForm" onsubmit="return ValidateFormRegister()" method = "POST">
         
                         <p id="LabelNewServername">Nouveau nom du serveur</p>
@@ -46,7 +46,7 @@
                     </div>
 
                     <!-- Formulaire de suppression du serveur -->
-                    <div>
+                    <div class="dev">
                         <form action = "/remove_server" id="ServerDeletionForm" name="ServerDeletionForm" onsubmit="return ValidateFormRegister()" method = "POST">
 
                         <p><input type = 'hidden' name = 'server_id' value = {{ server["id"] }}></p>
@@ -57,7 +57,7 @@
                     </div>
 
                     <!-- Formulaire de création d'un canal -->
-                    <div>
+                    <div class="dev">
                         <form action = "/create_channel" id="ChannelCreationForm" name="ChannelCreationForm" onsubmit="return ValidateFormRegister()" method = "POST">
         
                         <p id="LabelServername">Nom du canal</p>
@@ -69,7 +69,7 @@
                         <p><input type = 'submit' value = 'Créer le canal'/></p>
 
                         </form>
-                    </div>
+                    </div class="dev">
 
                     {% for channel in server["channels"] %}
 
@@ -77,7 +77,7 @@
                             <h4>+C {{ channel["name"] }}</h4>
                         </div>
 
-                        <div>
+                        <div class="dev">
                             <form action = "/rename_channel" id="ChannelRenameForm" name="ChannelRenameForm" on submit="return ValidateFormRegister()" method = "POST">
     
                             <p><input type = 'hidden' name = 'channel_id' value = {{ channel["id"] }}></p>
@@ -89,7 +89,7 @@
                             </form>
                         </div>
 
-                        <div>
+                        <div class="dev">
                             <form action = "/remove_channel" id="ChannelDeletionForm" name="ChannelDeletionForm" on submit="return ValidateFormRegister()" method = "POST">
     
                             <p><input type = 'hidden' name = 'channel_id' value = {{ channel["id"] }}></p>
@@ -99,21 +99,50 @@
                             </form>
                         </div>
 
+                        <div class="dev">
+
+                            {% for message in channel["last_messages"] %}
+
+                            <div class="dev">
+                                <img src={{"/file/" + message["image_token"] }} class="profil_picture_small">
+                                <p> {{ message["name"] }} </p>
+                                <p> {{ message["content"] }} </p>
+                            </div>
+
+                            {% endfor %}
+
+                            <div class="dev">
+                                
+                                <form action="/post_message" method="POST">
+
+                                    <input type="hidden" name="channel_id" value = {{ channel["id"] }}>
+
+                                    <input type="text" name="content">
+
+                                    <input type="submit" value="Envoyer">
+                                    
+                                </form>
+
+                            </div>
+
+                        </div>
+
                     {% endfor %}
 
                 </div>
             {% endfor %}
 		</div>
 
-        <div>
+        <div class="dev">
             <p><h3>Mes amis : </h3></p>
 
             {% for friend in attributes["friends"] %}
-                <li>{{ friend["name"] }}</li>
+                <img src={{"/file/" + friend["image_token"]}} class="profil_picture_small">
+                <p>{{ friend["name"] }}</p>
             {% endfor %}
         </div>
 
-        <div>
+        <div class="dev">
             <form action="/change_profilepicture" method="post" enctype="multipart/form-data">
 
                 <h3> Select image to upload: </h3>

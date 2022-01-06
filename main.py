@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, make_response, redirect, url_
 from werkzeug.utils import secure_filename
 import hashlib
 import uuid
+import time
 from dispute_sql import *
 
 UPLOAD_FOLDER = "./files/"
@@ -214,6 +215,27 @@ def URL_remove_channel():
     return redirect('/home')
 
     pass
+
+@app.route('/post_message', methods=['POST'])
+def URL_post_message():
+
+    if(request.method == 'POST'):
+        if("token" in session):
+            if(sh.IsValidSession(session['token'])):
+
+                user = sh.Sessions[session['token']]
+
+                message = Message()
+                message.content = request.form['content']
+                message.sender_id = user.id
+                message.channel_id = request.form['channel_id']
+                message.timestamp = int(time.time())
+
+                if(db.IsChannelMember(message.channel_id, user) and message.content!=""):
+                    db.CreateMessage(message)
+
+    return redirect('/home')
+
 
 @app.route('/request_addfriend', methods=['POST'])
 def URL_request_addfriend():

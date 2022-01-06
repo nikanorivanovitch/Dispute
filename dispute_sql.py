@@ -131,6 +131,7 @@ class Message:
         self.content=None
         self.sender_id=None
         self.channel_id=None
+        self.timestamp=None
 
         pass
 
@@ -273,7 +274,7 @@ class DatabaseHandler:
         output = []
 
         for line in result:
-            output.append({"id" : line[0], "name" : line[1]})
+            output.append({"id" : line[0], "name" : line[1], "last_messages" : self.GetLastMessages(line[0])})
 
         return output
 
@@ -288,7 +289,7 @@ class DatabaseHandler:
         output = []
 
         for line in result:
-            output.append({"name" : line[1], "image" : None})
+            output.append({"name" : line[1], "image_token" : line[5]})
 
         return output
 
@@ -374,8 +375,8 @@ class DatabaseHandler:
 
     def CreateMessage(self, message):
 
-        request = "INSERT INTO message(message_id, message_writer_id, message_content, message_channel_id) VALUES (?, ?, ?, ?);"
-        self.cursor.execute(request, (message.id, message.sender_id, message.content, message.channel_id))
+        request = "INSERT INTO message(message_id, message_timestamp, message_sender_id, message_content, message_channel_id) VALUES (?, ?, ?, ?, ?);"
+        self.cursor.execute(request, (message.id, message.timestamp, message.sender_id, message.content, message.channel_id))
 
         message.id = self.GetIncrementOfTable("message")
 
@@ -398,6 +399,29 @@ class DatabaseHandler:
 
         return False
 
+    def IsChannelMember(self, channel_id, user):
+
+        request = "SELECT * FROM channel WHERE channel_id = (?) AND channel_server_id IN (SELECT server_id FROM membership WHERE user_id = (?));"
+        result = self.cursor.execute(request, (channel_id, user.id)).fetchall()
+
+        if(len(result)==1):
+            return True
+
+        return False
+
+    def GetLastMessages(self, channel_id):
+
+        request = "SELECT * FROM message INNER JOIN user ON user.user_id = message.message_sender_id AND message.message_channel_id = (?);"
+        messages = self.cursor.execute(request, (channel_id,)).fetchall()
+
+        output = []
+
+        for message in messages:
+            output.append({ "id" : message[0], "timestamp" : message[1] , "name" : message[6], "image_token" : message[10], "content" : message[3]})
+
+        return output
+
+
     #############
     # Connexion #
     #############
@@ -417,7 +441,7 @@ class DatabaseHandler:
 
         return True
 
-    def AddFriendShip(self, user1_id, user2_id):
+    def AddFriendship(self, user1_id, user2_id):
 
         if(user1_id!=user2_id):
 
