@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, make_response, redirect, url_for, session, flash, send_file
+from flask_socketio import SocketIO, join_room, leave_room
 from werkzeug.utils import secure_filename
 import hashlib
 import uuid
@@ -10,6 +11,7 @@ ALLOWED_EXTENSIONS = set(['png','jpg','jpeg','gif'])
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__, template_folder='templates')
+socketio = SocketIO(app)
 
 #PAGE D'ACCUEIL
 @app.route('/')
@@ -233,6 +235,8 @@ def URL_post_message():
 
                 if(db.IsChannelMember(message.channel_id, user) and message.content!=""):
                     db.CreateMessage(message)
+                    print("TOKEN POST : ",session['token'])
+                    socketio.emit('new_message', {}, room=session['token'])
 
     return redirect('/home')
 
@@ -320,14 +324,31 @@ def URL_file(FileToken):
             print("PATH : ",app.config['UPLOAD_FOLDER'] + FileToken + db.GetExtensionOfFileToken(FileToken))
             return send_file(app.config['UPLOAD_FOLDER'] + FileToken + db.GetExtensionOfFileToken(FileToken), as_attachment=False)
 
-        return 0
-
     return 0
 
+@socketio.on('connected')
+def EVENT_connected():
 
+    if('token' in session):
+        if(sh.IsValidSession(session['token'])):
 
+            print("CONNEXION SOCKETIO")
 
+            join_room(session['token'])
+            send_to_all()
 
+@socketio.on('disconnected')
+def EVENT_disconnected():
+
+    if('token' in session):
+        if(sh.IsValidSession(session['token'])):
+            leave_room(session['token'])
+
+def send_to_all():
+
+    for token in sh.Sessions:
+        print("TOKEN : ",token)
+        socketio.emit('test', {}, room=token)
 
 if __name__ == "__main__":
 
@@ -341,4 +362,5 @@ if __name__ == "__main__":
     app.secret_key = 'SecretBienGardéIsseMesBonsSeigneurs'
     app.config['SESSION_TYPE'] = 'filesystem'
     app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-    app.run()
+    app.config['MAX_CONTENT_LENGTH'] = 4 * 1000 * 1000
+    socketio.run(app)
