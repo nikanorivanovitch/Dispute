@@ -10,94 +10,118 @@
             <img src={{"http://localhost:5000/file/" + attributes["userpicturetoken"]}} class="profil_picture_small">
 		</div>
 
-		<div>
-			<form action = "/create_server" id="ServerCreationForm" name="ServerCreationForm" onsubmit="return ValidateFormRegister()" method = "POST">
-            
-        		<p><h3>Créer un serveur</h3></p>
+		<div id="server_creation_form">
+        	<p><h3>Créer un serveur</h3></p>
 
-        		<p id="LabelServername">Nom du serveur</p>
-        		<p><input type = 'text' name = 'servername' required/></p>
+        	<p id = "creation_server_name_label">Nom du nouveau serveur</p>
+        	<p><input id = "creation_server_name" type = 'text'/></p>
 
-        		<p><input type = 'submit' value = 'Créer le serveur'/></p>
-
-    		</form>
+        	<p><input type = 'button' value = 'Créer le serveur' onclick="create_server();"/></p>
 		</div>
 
-		<div class="dev">
-            <p><h3>Mes serveurs : </h3></p>
+        <script type="text/javascript">
+
+            function create_server()
+            {
+                var server_name = document.getElementById("creation_server_name").value;
+                var payload = {
+                    "servername" : server_name
+                };
+
+                dispute_post("/create_server", payload);
+            }
+
+            function rename_server(server_id)
+            {
+                var new_server_name = document.getElementById("new_server_name_" + server_id.toString()).value;
+                var payload = {
+                    "server_id" : server_id.toString(),
+                    "server_name" : new_server_name
+                };
+
+                dispute_post("/rename_server", payload);
+            }
+            
+            function dispute_post(api_target, api_payload)
+            {
+                var xhr = new XMLHttpRequest();
+                xhr.open("POST", api_target, true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.send(JSON.stringify(api_payload));
+            }
+
+            function remove_server(server_id)
+            {
+                var payload = {
+                    "server_id" : server_id
+                };
+
+                dispute_post("/remove_server", payload);
+            }
+
+            function create_channel(server_id)
+            {
+                var channel_name = document.getElementById("creation_channel_name_" + server_id.toString()).value
+                var payload = {
+                    "server_id" : server_id,
+                    "channel_name" : channel_name
+                };
+
+                dispute_post("/create_channel", payload);
+            }
+
+            function rename_channel(channel_id)
+            {
+                var channel_name = document.getElementById("new_channel_name_" + channel_id.toString()).value
+                var payload = {
+                    "channel_id" : channel_id,
+                    "channel_name" : channel_name
+                };
+
+                dispute_post("/rename_channel", payload);
+            }
+
+            function remove_channel(channel_id)
+            {
+                var payload = {
+                    "channel_id" : channel_id
+                };
+
+                dispute_post("/remove_channel", payload);
+            }
+
+        </script>
+
+		<div id="server_tab" class="dev">
+            <p>Mes serveurs :</p>
 
             {% for server in attributes["servers"] %}
-                <div class="dev">
-                    <h3>+S{{ server["name"] }}<h3>
+                <div id="server_{{server["id"]}}" class="dev" server_id="{{server["id"]}}">
 
-                    <!-- Formulaire de renommage du serveur -->
-                    <div class="dev">
-                        <form action = "/rename_server" id="ServerRenameForm" name="ServerRenameForm" onsubmit="return ValidateFormRegister()" method = "POST">
+                    <p id="server_name_{{server["id"]}}">{{ server["name"] }}</p>
+
+                    <p><input id="new_server_name_{{server["id"]}}" type="text" name="server_name" value={{server["name"]}}/></p>
+
+                    <p><input type="button" value="Renommer" onclick="rename_server({{server["id"]}});"></p>
+                    
+                    <p><input type="button" value="Supprimer" onclick="remove_server({{server["id"]}});"></p>
+
+                    <p><input id="creation_channel_name_{{server["id"]}}" type="text" name = 'channel_name'/></p>
         
-                        <p id="LabelNewServername">Nouveau nom du serveur</p>
+                    <p><input type="button" value = 'Créer le canal' onclick="create_channel({{server["id"]}});" /></p>
 
-                        <p><input type = 'hidden' name = 'server_id' value = {{ server["id"] }}></p>
-
-                        <p><input type = 'text' name = 'server_name' required/></p>
-        
-                        <p><input type = 'submit' value = 'Renommer le serveur'/></p>
-
-                        </form>
-                    </div>
-
-                    <!-- Formulaire de suppression du serveur -->
-                    <div class="dev">
-                        <form action = "/remove_server" id="ServerDeletionForm" name="ServerDeletionForm" onsubmit="return ValidateFormRegister()" method = "POST">
-
-                        <p><input type = 'hidden' name = 'server_id' value = {{ server["id"] }}></p>
-        
-                        <p><input type = 'submit' value = 'Supprimer le serveur'/></p>
-
-                        </form>
-                    </div>
-
-                    <!-- Formulaire de création d'un canal -->
-                    <div class="dev">
-                        <form action = "/create_channel" id="ChannelCreationForm" name="ChannelCreationForm" onsubmit="return ValidateFormRegister()" method = "POST">
-        
-                        <p id="LabelServername">Nom du canal</p>
-
-                        <p><input type = 'hidden' name = 'server_id' value = {{ server["id"] }}></p>
-
-                        <p><input type = 'text' name = 'channel_name' required/></p>
-        
-                        <p><input type = 'submit' value = 'Créer le canal'/></p>
-
-                        </form>
-                    </div class="dev">
 
                     {% for channel in server["channels"] %}
 
-                        <div>
-                            <h4>+C {{ channel["name"] }}</h4>
-                        </div>
+                    <div id="channel_{{channel["id"]}}" channel_id="{{channel["id"]}}">
 
-                        <div class="dev">
-                            <form action = "/rename_channel" id="ChannelRenameForm" name="ChannelRenameForm" on submit="return ValidateFormRegister()" method = "POST">
+                        <p id="channel_name_{{channel["id"]}}">{{ channel["name"] }}</p>
     
-                            <p><input type = 'hidden' name = 'channel_id' value = {{ channel["id"] }}></p>
-    
-                            <p><input type = 'text' name = 'channel_name' required/></p>
+                        <p><input id="new_channel_name_{{channel["id"]}}" type = 'text' name = 'channel_name' required/></p>
             
-                            <p><input type = 'submit' value = 'Renommer le canal'/></p>
-    
-                            </form>
-                        </div>
+                        <p><input type='button' value='Renommer le canal' onclick="rename_channel({{channel["id"]}})" /></p>
 
-                        <div class="dev">
-                            <form action = "/remove_channel" id="ChannelDeletionForm" name="ChannelDeletionForm" on submit="return ValidateFormRegister()" method = "POST">
-    
-                            <p><input type = 'hidden' name = 'channel_id' value = {{ channel["id"] }}></p>
-            
-                            <p><input type = 'submit' value = 'Supprimer le canal'/></p>
-    
-                            </form>
-                        </div>
+                        <p><input type='button' value='Supprimer le canal' onclick="remove_channel({{channel["id"]}})" /></p>
 
                         <div class="dev">
 
@@ -127,6 +151,8 @@
 
                         </div>
 
+                    </div>
+
                     {% endfor %}
 
                 </div>
@@ -134,7 +160,7 @@
 		</div>
 
         <div class="dev">
-            <p><h3>Mes amis : </h3></p>
+            <p>Mes amis :</p>
 
             {% for friend in attributes["friends"] %}
                 <img src={{"/file/" + friend["image_token"]}} class="profil_picture_small">
@@ -158,6 +184,7 @@
 </html>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+
 <script type="text/javascript" charset="utf-8">
     var socket = io();
 
@@ -173,4 +200,19 @@
         console.log(data)
         console.log('LOG')
     });
+
+    /*var xhr = new XMLHttpRequest();
+    xhr.open("POST", '/post_message', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    data = JSON.stringify({"channel_id": "1", "content": "Coucou les copains"});
+    xhr.send(data);
+
+    function dispute_post(api_target, api_payload)
+    {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", 'api_target', true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(api_payload);
+    }*/
+
 </script>

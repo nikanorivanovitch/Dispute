@@ -293,6 +293,18 @@ class DatabaseHandler:
 
         return output
 
+    def GetUserOfServer(self, server_id):
+
+        request = "SELECT user_id FROM membership WHERE server_id = (?);"
+        result = self.cursor.execute(request, (server_id,)).fetchall()
+
+        output = []
+
+        for line in result:
+            output.append(line[0])
+
+        return output
+
     ###########
     # Serveur #
     ###########
