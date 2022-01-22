@@ -1,7 +1,9 @@
 from flask import Flask, render_template, request, make_response, redirect, url_for, session, flash, send_file
+from flask_socketio import SocketIO, join_room, leave_room
 from werkzeug.utils import secure_filename
 import hashlib
 import uuid
+import time
 from dispute_sql import *
 
 UPLOAD_FOLDER = "./files/"
@@ -9,6 +11,7 @@ ALLOWED_EXTENSIONS = set(['png','jpg','jpeg','gif'])
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__, template_folder='templates')
+socketio = SocketIO(app)
 
 #PAGE D'ACCUEIL
 @app.route('/')
@@ -99,23 +102,171 @@ def URL_home():
 
     return redirect('/')
 
+# <API> fonctionne avec des JSON
 @app.route('/create_server', methods=['POST'])
 def URL_create_server():
+
+    print(request.json)
 
     if(request.method == 'POST'):
         if("token" in session):
             if(sh.IsValidSession(session['token'])):
 
                 server = Server()
-                server.name = request.form['servername']
+                server.name = request.json['servername']
                 server.creator = sh.Sessions[session['token']]
 
                 server = db.CreateServer(server)
+
+                main_channel = Channel()
+                main_channel.name = "général"
+                main_channel.server_id = server.id
+
+                main_channel = db.CreateChannel(main_channel)
 
     return redirect('/home')
 
     pass
 
+# <API> fonctionne avec des JSON
+@app.route('/rename_server', methods=['POST'])
+def URL_rename_server():
+
+    print("REQUEST")
+    print(request.json)
+
+    if(request.method == 'POST'):
+        if("token" in session):
+            if(sh.IsValidSession(session['token'])):
+
+                server = Server()
+                server.id = request.json['server_id']
+                server.name = request.json['server_name']
+                server.creator = sh.Sessions[session['token']]
+                user = sh.Sessions[session['token']]
+
+                if(db.IsServerAdmin(server.id, user)):
+                    server = db.RenameServer(server)
+                    print(db.GetUserOfServer(server.id))
+
+
+
+    return '0'
+
+# <API> fonctionne avec des JSON
+@app.route('/remove_server', methods=['POST'])
+def URL_remove_server():
+
+    if(request.method == 'POST'):
+        if("token" in session):
+            if(sh.IsValidSession(session['token'])):
+
+                server_id = request.json['server_id']
+                user = sh.Sessions[session['token']]
+
+                if(db.IsServerAdmin(server_id, user)):
+                    db.RemoveServer(server_id)
+
+    return '0'
+
+# <API> fonctionne avec des JSON
+@app.route('/create_channel', methods=['POST'])
+def URL_create_channel():
+
+    print(request.json)
+
+    if(request.method == 'POST'):
+        if("token" in session):
+            if(sh.IsValidSession(session['token'])):
+
+                channel = Channel()
+                channel.server_id = request.json['server_id']
+                channel.name = request.json['channel_name']
+                user = sh.Sessions[session['token']]
+
+                if(db.IsServerAdmin(channel.server_id, user)):
+                    db.CreateChannel(channel)
+
+    return redirect('/home')
+
+    pass
+
+# <API> fonctionne avec des JSON
+@app.route('/rename_channel', methods=['POST'])
+def URL_rename_channel():
+
+    print(request.json)
+
+    if(request.method == 'POST'):
+        if("token" in session):
+            if(sh.IsValidSession(session['token'])):
+
+                channel = Channel()
+                channel.id = request.json['channel_id']
+                channel.name = request.json['channel_name']
+                user = sh.Sessions[session['token']]
+
+                if(db.IsChannelAdmin(channel.id, user)):
+                    db.RenameChannel(channel)
+
+    return redirect('/home')
+
+    pass
+
+# <API> fonctionne avec des JSON
+@app.route('/remove_channel', methods=['POST'])
+def URL_remove_channel():
+
+    print(request.json)
+
+    print("COUCOU")
+    if(request.method == 'POST'):
+        if("token" in session):
+            if(sh.IsValidSession(session['token'])):
+
+                channel_id = request.json['channel_id']
+                user = sh.Sessions[session['token']]
+
+                if(db.IsChannelAdmin(channel_id, user)):
+                    db.RemoveChannel(channel_id)
+
+    return redirect('/home')
+
+    pass
+
+# <API> fonctionne avec des JSON
+@app.route('/post_message', methods=['POST'])
+def URL_post_message():
+
+    print("POST MESSAGE REQUEST")
+
+    if(request.method == 'POST'):
+        if("token" in session):
+            if(sh.IsValidSession(session['token'])):
+
+                print("POST MESSAGE VALID")
+                print(request.__dict__)
+                print(request.data)
+                print(request.args)
+                print(request.json)
+                print("SHOWN OK")
+
+                user = sh.Sessions[session['token']]
+
+                message = Message()
+                message.content = request.json['content']
+                message.sender_id = user.id
+                message.channel_id = request.json['channel_id']
+                message.timestamp = int(time.time())
+
+                if(db.IsChannelMember(message.channel_id, user) and message.content!=""):
+                    db.CreateMessage(message)
+                    print("TOKEN POST : ",session['token'])
+                    socketio.emit('new_message', {"content" : message.content}, room=session['token'])
+
+    return '0'
+
+# <API> fonctionne avec des JSON
 @app.route('/request_addfriend', methods=['POST'])
 def URL_request_addfriend():
 
@@ -126,6 +277,7 @@ def URL_request_addfriend():
                 if(db.GetUserFromId(request.form['friend_id'])):
                     db.AddFriendshipRequest(session['token'].id, request.form['friend_id'])
 
+# <API> fonctionne avec des JSON
 @app.route('/addfriend', methods=['POST'])
 def URL_addfriend():
 
@@ -136,6 +288,7 @@ def URL_addfriend():
                 if(db.GetUserFromId(request.form['friend_id'])):
                     db.AddFriendshipRequest(session['token'].id, request.form['friend_id'])
 
+# <API> fonctionne avec des JSON
 @app.route('/removefriend', methods=['POST'])
 def URL_removefriend():
 
@@ -145,6 +298,7 @@ def URL_removefriend():
 
                 if(db.GetUserFromId(request.form['friend_id'])):
                     db.RemoveFriendship(sh.Sessions[session['token']].id, request.form['friend_id'])
+
 
 @app.route('/change_profilepicture', methods=['POST'])
 def URL_change_profilepicture():
@@ -199,14 +353,31 @@ def URL_file(FileToken):
             print("PATH : ",app.config['UPLOAD_FOLDER'] + FileToken + db.GetExtensionOfFileToken(FileToken))
             return send_file(app.config['UPLOAD_FOLDER'] + FileToken + db.GetExtensionOfFileToken(FileToken), as_attachment=False)
 
-        return 0
-
     return 0
 
+@socketio.on('connected')
+def EVENT_connected():
 
+    if('token' in session):
+        if(sh.IsValidSession(session['token'])):
 
+            print("CONNEXION SOCKETIO")
 
+            join_room(session['token'])
+            send_to_all()
 
+@socketio.on('disconnected')
+def EVENT_disconnected():
+
+    if('token' in session):
+        if(sh.IsValidSession(session['token'])):
+            leave_room(session['token'])
+
+def send_to_all():
+
+    for token in sh.Sessions:
+        print("TOKEN : ",token)
+        socketio.emit('test', {}, room=token)
 
 if __name__ == "__main__":
 
@@ -220,4 +391,5 @@ if __name__ == "__main__":
     app.secret_key = 'SecretBienGardéIsseMesBonsSeigneurs'
     app.config['SESSION_TYPE'] = 'filesystem'
     app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-    app.run()
+    app.config['MAX_CONTENT_LENGTH'] = 4 * 1000 * 1000
+    socketio.run(app)

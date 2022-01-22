@@ -1,47 +1,218 @@
 <html>
+    <head>
+        <link rel="stylesheet" href="../static/css/home.css">
+    </head>
+
 	<body>
 
 		<div>
 			<p>Hello {{attributes["username"]}} !</p>
-            <img src={{"http://localhost:5000/file/" + attributes["userpicturetoken"]}}>
+            <img src={{"http://localhost:5000/file/" + attributes["userpicturetoken"]}} class="profil_picture_small">
 		</div>
 
-		<div>
-			<form action = "/create_server" id="ServerCreationForm" name="ServerCreationForm" onsubmit="return ValidateFormRegister()" method = "POST">
+		<div id="server_creation_form">
+        	<p><h3>Créer un serveur</h3></p>
+
+        	<p id = "creation_server_name_label">Nom du nouveau serveur</p>
+        	<p><input id = "creation_server_name" type = 'text'/></p>
+
+        	<p><input type = 'button' value = 'Créer le serveur' onclick="create_server();"/></p>
+		</div>
+
+        <script type="text/javascript">
+
+            function create_server()
+            {
+                var server_name = document.getElementById("creation_server_name").value;
+                var payload = {
+                    "servername" : server_name
+                };
+
+                dispute_post("/create_server", payload);
+            }
+
+            function rename_server(server_id)
+            {
+                var new_server_name = document.getElementById("new_server_name_" + server_id.toString()).value;
+                var payload = {
+                    "server_id" : server_id.toString(),
+                    "server_name" : new_server_name
+                };
+
+                dispute_post("/rename_server", payload);
+            }
             
-        		<p><h3>Créer un serveur</h3></p>
+            function dispute_post(api_target, api_payload)
+            {
+                var xhr = new XMLHttpRequest();
+                xhr.open("POST", api_target, true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.send(JSON.stringify(api_payload));
+            }
 
-        		<p id="LabelServername">Nom du serveur</p>
-        		<p><input type = 'text' name = 'servername' required/></p>
+            function remove_server(server_id)
+            {
+                var payload = {
+                    "server_id" : server_id
+                };
 
-        		<p><input type = 'submit' value = 'Créer le serveur'/></p>
+                dispute_post("/remove_server", payload);
+            }
 
-    		</form>
-		</div>
+            function create_channel(server_id)
+            {
+                var channel_name = document.getElementById("creation_channel_name_" + server_id.toString()).value
+                var payload = {
+                    "server_id" : server_id,
+                    "channel_name" : channel_name
+                };
 
-		<div>
-            <p><h3>Mes serveurs : </h3></p>
+                dispute_post("/create_channel", payload);
+            }
+
+            function rename_channel(channel_id)
+            {
+                var channel_name = document.getElementById("new_channel_name_" + channel_id.toString()).value
+                var payload = {
+                    "channel_id" : channel_id,
+                    "channel_name" : channel_name
+                };
+
+                dispute_post("/rename_channel", payload);
+            }
+
+            function remove_channel(channel_id)
+            {
+                var payload = {
+                    "channel_id" : channel_id
+                };
+
+                dispute_post("/remove_channel", payload);
+            }
+
+        </script>
+
+		<div id="server_tab" class="dev">
+            <p>Mes serveurs :</p>
 
             {% for server in attributes["servers"] %}
-                <li>{{ server["name"] }}</li>
+                <div id="server_{{server["id"]}}" class="dev" server_id="{{server["id"]}}">
+
+                    <p id="server_name_{{server["id"]}}">{{ server["name"] }}</p>
+
+                    <p><input id="new_server_name_{{server["id"]}}" type="text" name="server_name" value={{server["name"]}}/></p>
+
+                    <p><input type="button" value="Renommer" onclick="rename_server({{server["id"]}});"></p>
+                    
+                    <p><input type="button" value="Supprimer" onclick="remove_server({{server["id"]}});"></p>
+
+                    <p><input id="creation_channel_name_{{server["id"]}}" type="text" name = 'channel_name'/></p>
+        
+                    <p><input type="button" value = 'Créer le canal' onclick="create_channel({{server["id"]}});" /></p>
+
+
+                    {% for channel in server["channels"] %}
+
+                    <div id="channel_{{channel["id"]}}" channel_id="{{channel["id"]}}">
+
+                        <p id="channel_name_{{channel["id"]}}">{{ channel["name"] }}</p>
+    
+                        <p><input id="new_channel_name_{{channel["id"]}}" type = 'text' name = 'channel_name' required/></p>
+            
+                        <p><input type='button' value='Renommer le canal' onclick="rename_channel({{channel["id"]}})" /></p>
+
+                        <p><input type='button' value='Supprimer le canal' onclick="remove_channel({{channel["id"]}})" /></p>
+
+                        <div class="dev">
+
+                            {% for message in channel["last_messages"] %}
+
+                            <div class="dev">
+                                <img src={{"/file/" + message["image_token"] }} class="profil_picture_small">
+                                <p> {{ message["name"] }} </p>
+                                <p> {{ message["content"] }} </p>
+                            </div>
+
+                            {% endfor %}
+
+                            <div class="dev">
+                                
+                                <form action="/post_message" method="POST">
+
+                                    <input type="hidden" name="channel_id" value = {{ channel["id"] }}>
+
+                                    <input type="text" name="content">
+
+                                    <input type="submit" value="Envoyer">
+                                    
+                                </form>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    {% endfor %}
+
+                </div>
             {% endfor %}
 		</div>
 
-        <div>
-            <p><h3>Mes amis : </h3></p>
+        <div class="dev">
+            <p>Mes amis :</p>
 
             {% for friend in attributes["friends"] %}
-                <li>{{ friend["name"] }}</li>
+                <img src={{"/file/" + friend["image_token"]}} class="profil_picture_small">
+                <p>{{ friend["name"] }}</p>
             {% endfor %}
         </div>
 
-        <div>
+        <div class="dev">
             <form action="/change_profilepicture" method="post" enctype="multipart/form-data">
+
                 <h3> Select image to upload: </h3>
+
                 <input type="file" name="profil_picture" id="profil_picture">
+
                 <input type="submit" value="Upload Image" name="submit">
+
             </form>
         </div>
 
 	</body>
 </html>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+
+<script type="text/javascript" charset="utf-8">
+    var socket = io();
+
+    socket.on('connect', function() {
+        socket.emit('connected');
+    });
+
+    socket.on('test', function() {
+        console.log('TEST')
+    });
+
+    socket.on('new_message', function(data) {
+        console.log(data)
+        console.log('LOG')
+    });
+
+    /*var xhr = new XMLHttpRequest();
+    xhr.open("POST", '/post_message', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    data = JSON.stringify({"channel_id": "1", "content": "Coucou les copains"});
+    xhr.send(data);
+
+    function dispute_post(api_target, api_payload)
+    {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", 'api_target', true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(api_payload);
+    }*/
+
+</script>

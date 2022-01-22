@@ -1,0 +1,12 @@
+.dev
+{
+    outline: 8px ridge rgba(170, 50, 220, .6);
+    border-radius: 2rem;    
+}
+
+.profil_picture_small
+{
+    height: 100px;
+    width: 100px;
+    border-radius: 50%;
+}
