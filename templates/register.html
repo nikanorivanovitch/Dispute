@@ -1,26 +1,28 @@
-<html>
-    <body>
-        <form action = "/register" id="RegisterForm" name="RegisterForm" onsubmit="return ValidateFormRegister()" method = "POST">
-            
-            <p><h3>Inscription</h3></p>
-
-            <p id="LabelPseudonyme">Pseudonyme</p>
-            <p><input type = 'text' name = 'username' required/></p>
-
-            <p id="LabelEmail">Adresse mail</p>
-            <p><input type = 'text' name = 'email' required/></p>
-
-            <p id="LabelPassword">Mot de passe</p>
-            <p><input type = 'password' name = 'password' required/></p>
-
-            <p id="LabelPasswordc">Confirmation du mot de passe</p>
-            <p><input type = 'password' name = 'passwordc' required/></p>
-
-            <p><input type = 'submit' value = 'Register'/></p>
-        </form>
-
-   </body>
-
+<html Lang="fr"> 
+<head> 
+   <meta charset="UTF-8"> 
+   <meta http-equiv="X-UA-Compatible content="IE=edge> 
+   <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+   <link rel="stylesheet" href="../static/css/login.css"> 
+   <title>Dispute Inscription</title> 
+</head>
+<body>
+    <div class="contianer"> 
+        <div class="bg-img"></div> 
+        <div class="content">  
+            <form action = "/register" id="RegisterForm" name="RegisterForm" onsubmit="return ValidateFormRegister()" method = "POST">
+                <div>
+                    <input type="text" name='username' placeholder="Nom d'utilisateur" required> 
+                    <input type="email" name='email' placeholder="Email" required> 
+                    <input type="password" name='password' placeholder="Mot de passe" required>
+                    <input type="password" name='passwordc' placeholder="Confirmation du mot de passe" required>
+                </div>
+                <button>Inscription</button>
+            </form>
+            <img src="../static/images/logo.png" width="100" align="center"> 
+        </div>
+    </div>
+</body>
 </html>
 
 <script type="text/javascript">

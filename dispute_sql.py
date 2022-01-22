@@ -121,6 +121,7 @@ class Channel:
         self.id=None
         self.name=None
         self.users=None
+        self.server_id=None
 
 class Message:
 
@@ -128,8 +129,9 @@ class Message:
 
         self.id=None
         self.content=None
-        self.sender=None
+        self.sender_id=None
         self.channel_id=None
+        self.timestamp=None
 
         pass
 
@@ -258,7 +260,21 @@ class DatabaseHandler:
         output = []
 
         for line in result:
-            output.append({"name" : line[1], "image" : None})
+
+            channel_dictionnary = self.GetChannelsOfServer(line[0]) 
+            output.append({"id" : line[0], "name" : line[1], "image" : None, "channels" : channel_dictionnary})
+
+        return output
+
+    def GetChannelsOfServer(self, server_id):
+
+        request = "SELECT *  FROM channel WHERE channel_server_id = (?);"
+        result = self.cursor.execute(request, (server_id,)).fetchall()
+
+        output = []
+
+        for line in result:
+            output.append({"id" : line[0], "name" : line[1], "last_messages" : self.GetLastMessages(line[0])})
 
         return output
 
@@ -273,7 +289,19 @@ class DatabaseHandler:
         output = []
 
         for line in result:
-            output.append({"name" : line[1], "image" : None})
+            output.append({"name" : line[1], "image_token" : line[5]})
+
+        return output
+
+    def GetUserOfServer(self, server_id):
+
+        request = "SELECT user_id FROM membership WHERE server_id = (?);"
+        result = self.cursor.execute(request, (server_id,)).fetchall()
+
+        output = []
+
+        for line in result:
+            output.append(line[0])
 
         return output
 
@@ -302,17 +330,56 @@ class DatabaseHandler:
 
         return server
 
+    def RemoveServer(self, server_id):
+
+        request = "DELETE FROM server WHERE server_id = (?);"
+        self.cursor.execute(request, (server_id,))
+
+        request = "DELETE FROM channel WHERE channel_server_id = (?);"
+        self.cursor.execute(request, (server_id,))
+
+        request = "DELETE FROM message WHERE message_channel_id IN (SELECT channel_id FROM channel WHERE channel_server_id = (?));"
+        self.cursor.execute(request, (server_id,))
+
+        return True
+
+    def IsServerAdmin(self, server_id, user):
+
+        request = "SELECT * FROM server WHERE server_id = (?) AND server_creator_id = (?);"
+        result = self.cursor.execute(request, (server_id, user.id)).fetchall()
+
+        if(len(result)==1):
+            return True
+
+        return False
+
+
     ###########
     # Channel #
     ###########
 
     def CreateChannel(self, channel):
 
-        pass
+        request = "INSERT INTO channel(channel_id, channel_name, channel_server_id) VALUES (?, ?, ?);"
+        self.cursor.execute(request, (channel.id, channel.name, channel.server_id))
+
+        channel.id = self.GetIncrementOfTable("channel")
+
+        return channel 
 
     def RenameChannel(self, channel):
 
-        pass
+        request = "UPDATE channel SET channel_name = (?) WHERE channel_id = (?);"
+        self.cursor.execute(request, (channel.name, channel.id))
+
+        return channel
+
+    def RemoveChannel(self, channel_id):
+
+        request = "DELETE FROM channel WHERE channel_id = (?);"
+        self.cursor.execute(request, (channel_id,))
+
+        return True
 
     ###########
     # Message #
@@ -320,11 +387,52 @@ class DatabaseHandler:
 
     def CreateMessage(self, message):
 
+        request = "INSERT INTO message(message_id, message_timestamp, message_sender_id, message_content, message_channel_id) VALUES (?, ?, ?, ?, ?);"
+        self.cursor.execute(request, (message.id, message.timestamp, message.sender_id, message.content, message.channel_id))
+
+        message.id = self.GetIncrementOfTable("message")
+
         pass
 
     def UpdateMessage(self, message):
 
-        pass
+        request = "UPDATE message SET message_content = (?) WHERE message_id = (?);"
+        self.cursor.execute(request, (message.content, message.id))
+
+        return message
+
+    def IsChannelAdmin(self, channel_id, user):
+
+        request = "SELECT * FROM channel WHERE channel_id = (?) AND channel_server_id IN (SELECT server_id FROM server WHERE server_creator_id = (?));"
+        result = self.cursor.execute(request, (channel_id, user.id)).fetchall()
+
+        if(len(result)==1):
+            return True
+
+        return False
+
+    def IsChannelMember(self, channel_id, user):
+
+        request = "SELECT * FROM channel WHERE channel_id = (?) AND channel_server_id IN (SELECT server_id FROM membership WHERE user_id = (?));"
+        result = self.cursor.execute(request, (channel_id, user.id)).fetchall()
+
+        if(len(result)==1):
+            return True
+
+        return False
+
+    def GetLastMessages(self, channel_id):
+
+        request = "SELECT * FROM message INNER JOIN user ON user.user_id = message.message_sender_id AND message.message_channel_id = (?);"
+        messages = self.cursor.execute(request, (channel_id,)).fetchall()
+
+        output = []
+
+        for message in messages:
+            output.append({ "id" : message[0], "timestamp" : message[1] , "name" : message[6], "image_token" : message[10], "content" : message[3]})
+
+        return output
+
 
     #############
     # Connexion #
@@ -345,7 +453,7 @@ class DatabaseHandler:
 
         return True
 
-    def AddFriendShip(self, user1_id, user2_id):
+    def AddFriendship(self, user1_id, user2_id):
 
         if(user1_id!=user2_id):
 
