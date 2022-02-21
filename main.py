@@ -93,8 +93,8 @@ def URL_home():
             attributes = {}
             user = sh.Sessions[session['token']]
 
-            attributes['username'] = user.name
-            attributes['userpicturetoken'] = user.picture_token
+            attributes['user'] = {'name' : user.name, 'discriminant' : user.discriminant, 'picture_token' : user.picture_token}
+            attributes['pending_friend_requests'] = db.GetFriendRequestsOfUser(user.id)
             attributes['servers'] = db.GetServersOfUser(user.id)
             attributes['friends'] = db.GetFriendsOfUser(user.id)
 
@@ -124,9 +124,9 @@ def URL_create_server():
 
                 main_channel = db.CreateChannel(main_channel)
 
-    return redirect('/home')
+                socketio.emit('new_server', {'server_id' : server.id, 'server_name' : server.name, 'server_image_token' : server.picture_token, 'channels' : [{'channel_id' : main_channel.id,'channel_name' : main_channel.name}]}, room=session['token'])
 
-    pass
+    return '0'
 
 # <API> fonctionne avec des JSON
 @app.route('/rename_server', methods=['POST'])
@@ -149,6 +149,15 @@ def URL_rename_server():
                     server = db.RenameServer(server)
                     print(db.GetUserOfServer(server.id))
 
+                for user_id in db.GetUserOfServer(server.id):
+
+                    token = sh.IsUserConnected(user_id)
+
+                    if(token != False):
+
+                        socketio.emit('rename_server', {'server_id' : server.id, 'new_name' : server.name}, room=token)
+
+
 
 
     return '0'
@@ -164,8 +173,19 @@ def URL_remove_server():
                 server_id = request.json['server_id']
                 user = sh.Sessions[session['token']]
 
+                users_ids_of_server = db.GetUserOfServer(server_id)
+
                 if(db.IsServerAdmin(server_id, user)):
+
                     db.RemoveServer(server_id)
+
+                    for user_id_to_remove in users_ids_of_server:
+
+                        token = sh.IsUserConnected(user)
+
+                        if(token!=False):
+
+                            socketio.emit('remove_server', {'server_id' : server_id}, room=token)
 
     return '0'
 
@@ -184,8 +204,16 @@ def URL_create_channel():
                 channel.name = request.json['channel_name']
                 user = sh.Sessions[session['token']]
 
-                if(db.IsServerAdmin(channel.server_id, user)):
-                    db.CreateChannel(channel)
+                #if(db.IsServerAdmin(channel.server_id, user)):
+                db.CreateChannel(channel)
+
+                for user_id in db.GetUserOfServer(channel.server_id):
+
+                    token = sh.IsUserConnected(user_id)
+
+                    if(token != False):
+
+                        socketio.emit('new_channel', {'server_id' : channel.server_id ,'channel_id' : channel.id, 'channel_name' : channel.name, 'last_messages' : []}, room=token)
 
     return redirect('/home')
 
@@ -204,14 +232,21 @@ def URL_rename_channel():
                 channel = Channel()
                 channel.id = request.json['channel_id']
                 channel.name = request.json['channel_name']
+                server_id = db.GetServerOfChannel(channel.id)
                 user = sh.Sessions[session['token']]
 
                 if(db.IsChannelAdmin(channel.id, user)):
                     db.RenameChannel(channel)
 
-    return redirect('/home')
+                for user_id in db.GetUserOfServer(server_id):
 
-    pass
+                    token = sh.IsUserConnected(user_id)
+
+                    if(token != False):
+
+                        socketio.emit('rename_channel', {'channel_id' : channel.id, 'new_name' : channel.name}, room=token)
+
+    return '0'
 
 # <API> fonctionne avec des JSON
 @app.route('/remove_channel', methods=['POST'])
@@ -219,7 +254,7 @@ def URL_remove_channel():
 
     print(request.json)
 
-    print("COUCOU")
+    print("REMOVE CHANNEL")
     if(request.method == 'POST'):
         if("token" in session):
             if(sh.IsValidSession(session['token'])):
@@ -227,12 +262,20 @@ def URL_remove_channel():
                 channel_id = request.json['channel_id']
                 user = sh.Sessions[session['token']]
 
+                users_ids_of_server = db.GetUserOfServer(db.GetServerOfChannel(channel_id))
+
                 if(db.IsChannelAdmin(channel_id, user)):
                     db.RemoveChannel(channel_id)
 
-    return redirect('/home')
+                    for user_id in users_ids_of_server:
 
-    pass
+                        token = sh.IsUserConnected(user_id)
+
+                        if(token!=False):
+
+                            socketio.emit('remove_channel', {'channel_id' : channel_id}, room=token)
+
+    return '0'
 
 # <API> fonctionne avec des JSON
 @app.route('/post_message', methods=['POST'])
@@ -249,7 +292,6 @@ def URL_post_message():
                 print(request.data)
                 print(request.args)
                 print(request.json)
-                print("SHOWN OK")
 
                 user = sh.Sessions[session['token']]
 
@@ -259,10 +301,30 @@ def URL_post_message():
                 message.channel_id = request.json['channel_id']
                 message.timestamp = int(time.time())
 
+                timestamp = str(datetime.fromtimestamp(int(message.timestamp))).replace(' ','@').replace('-','/')
+
                 if(db.IsChannelMember(message.channel_id, user) and message.content!=""):
+                    
                     db.CreateMessage(message)
-                    print("TOKEN POST : ",session['token'])
-                    socketio.emit('new_message', {"content" : message.content}, room=session['token'])
+
+                    server_id = db.GetServerOfChannel(int(message.channel_id))
+
+                    print(server_id)
+
+                    if(server_id == False):
+                        return '0'
+
+                    users_id = db.GetUserOfServer(int(server_id))
+
+                    print(users_id)
+
+                    for user_id in users_id:
+
+                        token = sh.IsUserConnected(user_id)
+
+                        if(token != False):
+
+                            socketio.emit('new_message', {'content' : message.content, 'emiter_name' : user.name, 'emiter_image' : user.picture_token, 'timestamp' : timestamp, 'channel' : message.channel_id}, room=token)
 
     return '0'
 
@@ -274,23 +336,60 @@ def URL_request_addfriend():
         if("token" in session):
             if(sh.IsValidSession(session['token'])):
 
-                if(db.GetUserFromId(request.form['friend_id'])):
-                    db.AddFriendshipRequest(session['token'].id, request.form['friend_id'])
+                if(db.GetUserFromId(request.json['friend_id']) and not db.DoesFriendshipExists(sh.Sessions[session['token']].id, request.json["friend_id"])):
+                    db.AddFriendshipRequest(sh.Sessions[session['token']].id, request.json["friend_id"])
+
+                    requester = sh.Sessions[session['token']]
+
+                    token = sh.IsUserConnected(request.json["friend_id"])
+
+                    if(token != False):
+                        socketio.emit('new_friend_request', {'id' : requester.id, 'name' : requester.name, 'picture_token' : requester.picture_token}, room=token)
+
+    return '0'
 
 # <API> fonctionne avec des JSON
-@app.route('/addfriend', methods=['POST'])
-def URL_addfriend():
+@app.route('/accept_friend', methods=['POST'])
+def URL_accept_friend():
+
+    if(request.method == 'POST'):
+        if("token" in session):
+            if(sh.IsValidSession(session['token'])):
+
+                if(db.DoesFriendshipRequestExists(request.json['friend_id'], sh.Sessions[session['token']].id)):
+                    db.RemoveFriendshipRequest(request.json['friend_id'], sh.Sessions[session['token']].id)
+                    db.AddFriendship(sh.Sessions[session['token']].id, request.json['friend_id'])
+
+                    friend1 = sh.Sessions[session['token']]
+                    friend2 = db.GetUserApparenceFromId(request.json['friend_id'])
+
+                    token = sh.IsUserConnected(friend2['id'])
+                    if(token):
+                        socketio.emit('new_friend', {'id' : friend1.id, 'name' : friend1.name, 'picture_token' : friend1.picture_token}, room=token)
+
+                    token = sh.IsUserConnected(friend1.id)
+                    if(token):
+                        socketio.emit('new_friend', {'id' : friend2['id'], 'name' : friend2['name'], 'picture_token' : friend2['picture_token']}, room=token)
+
+    return '0'
+
+# <API> fonctionne avec des JSON
+@app.route('/deny_friend', methods=['POST'])
+def URL_deny_friend():
 
     if(request.method == 'POST'):
         if("token" in session):
             if(sh.IsValidSession(session['token'])):
 
                 if(db.GetUserFromId(request.form['friend_id'])):
-                    db.AddFriendshipRequest(session['token'].id, request.form['friend_id'])
+                    db.RemoveFriendshipRequest(request.form['friend_id'], sh.Sessions[session['token']].id)
+
+                    user_denied = sh.Sessions[session['token']].id
+                    socketio.emit('deny_request', {'id' : request.form['friend_id']}, room=token)
 
 # <API> fonctionne avec des JSON
-@app.route('/removefriend', methods=['POST'])
-def URL_removefriend():
+@app.route('/remove_friend', methods=['POST'])
+def URL_remove_friend():
 
     if(request.method == 'POST'):
         if("token" in session):
@@ -298,6 +397,33 @@ def URL_removefriend():
 
                 if(db.GetUserFromId(request.form['friend_id'])):
                     db.RemoveFriendship(sh.Sessions[session['token']].id, request.form['friend_id'])
+
+# <API> fonctionne avec des JSON
+@app.route('/search_friend', methods=['POST'])
+def URL_search_friend():
+
+    if(request.method == 'POST'):
+        if("token" in session):
+            if(sh.IsValidSession(session['token'])):
+
+                print("token valide")
+                print(request.json)
+
+                if(request.json["friend_name"]!="" and request.json["friend_discriminant"]!=""):
+
+                    print("arguments valides")
+
+                    result = db.GetPotentialFriend(sh.Sessions[session['token']].id, request.json["friend_name"], request.json["friend_discriminant"])
+
+                    print("RESULTS")
+                    print(result)
+
+                    socketio.emit('friend_search', result, room=session["token"])
+
+                    return '0'
+    
+    socketio.emit('friend_search', [])
+    return '0'
 
 
 @app.route('/change_profilepicture', methods=['POST'])
@@ -340,6 +466,30 @@ def URL_change_profilepicture():
 
     return redirect('/home')
 
+@app.route('/join_server/<ServerToken>',methods=['GET','POST'])
+def URL_join_server(ServerToken):
+
+    if("token" in session):
+        if(sh.IsValidSession(session['token'])):
+
+            user = sh.Sessions[session['token']]
+
+            if(db.AddUserToServerFromToken(user.id, ServerToken)):
+
+                users_id = db.GetUserOfServerFromToken(ServerToken)
+
+                for user_id in users_id:
+
+                    if(user_id==user.id):
+                        continue
+
+                    token = sh.IsUserConnected(user_id)
+                    if(token):
+                        print("EMIT")
+                        socketio.emit('new_user', {'server_id' : db.GetServerIdFromToken(ServerToken), 'name' : user.name, 'picture_token' : user.picture_token, "user_id" : user.id}, room=token)
+
+    return redirect('/home')
+
 @app.route('/file/<FileToken>', methods=['GET'])
 def URL_file(FileToken):
 
@@ -348,12 +498,42 @@ def URL_file(FileToken):
         if(FileToken == 'default-picture'):
             return send_file('./static_pictures/' + 'clown.jpg')
 
-        if(db.DoesTokenFileExists(FileToken)):
+        elif(FileToken == 'default-server-picture'):
+            return send_file('./static_pictures/' + 'default-server-picture.png')
+
+        elif(FileToken == 'display_new_server_form_image'):
+            return send_file('./static_pictures/' + 'display_new_server_form_image.png')
+
+        elif(FileToken == 'button_deny'):
+            return send_file('./static_pictures/' + 'button_deny.png')
+
+        elif(FileToken == 'button_accept'):
+            return send_file('./static_pictures/' + 'button_accept.png')
+
+        elif(FileToken == 'add_button'):
+            return send_file('./static_pictures/' + 'add_button.png')
+
+        elif(db.DoesTokenFileExists(FileToken)):
 
             print("PATH : ",app.config['UPLOAD_FOLDER'] + FileToken + db.GetExtensionOfFileToken(FileToken))
             return send_file(app.config['UPLOAD_FOLDER'] + FileToken + db.GetExtensionOfFileToken(FileToken), as_attachment=False)
 
+        else:
+            return send_file('./static_pictures/' + 'clown.jpg')
+
     return 0
+
+@app.route('/user/<UserId>', methods=['GET'])
+def URL_user(UserId):
+
+    if(request.method == 'GET'):
+
+        if('token' in session):
+            if(sh.IsValidSession(session['token'])):
+
+                UserArray = db.GetUserFromId(UserId)
+
+                print("GET USER : ", User.__dict__)
 
 @socketio.on('connected')
 def EVENT_connected():
@@ -361,10 +541,9 @@ def EVENT_connected():
     if('token' in session):
         if(sh.IsValidSession(session['token'])):
 
-            print("CONNEXION SOCKETIO")
+            print("CONNEXION SOCKETIO : ",session['token'])
 
             join_room(session['token'])
-            send_to_all()
 
 @socketio.on('disconnected')
 def EVENT_disconnected():
@@ -372,12 +551,6 @@ def EVENT_disconnected():
     if('token' in session):
         if(sh.IsValidSession(session['token'])):
             leave_room(session['token'])
-
-def send_to_all():
-
-    for token in sh.Sessions:
-        print("TOKEN : ",token)
-        socketio.emit('test', {}, room=token)
 
 if __name__ == "__main__":
 

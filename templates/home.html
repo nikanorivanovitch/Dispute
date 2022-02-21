@@ -5,214 +5,301 @@
 
 	<body>
 
-		<div>
-			<p>Hello {{attributes["username"]}} !</p>
-            <img src={{"http://localhost:5000/file/" + attributes["userpicturetoken"]}} class="profil_picture_small">
-		</div>
+        <div id="server_tab" class="server_tab">
 
-		<div id="server_creation_form">
-        	<p><h3>Créer un serveur</h3></p>
+            <input type="image" name="display_friend_window" src="/file/display_new_server_form_image" class="server_picture_small" onclick="display_friend_window()">
 
-        	<p id = "creation_server_name_label">Nom du nouveau serveur</p>
-        	<p><input id = "creation_server_name" type = 'text'/></p>
-
-        	<p><input type = 'button' value = 'Créer le serveur' onclick="create_server();"/></p>
-		</div>
-
-        <script type="text/javascript">
-
-            function create_server()
-            {
-                var server_name = document.getElementById("creation_server_name").value;
-                var payload = {
-                    "servername" : server_name
-                };
-
-                dispute_post("/create_server", payload);
-            }
-
-            function rename_server(server_id)
-            {
-                var new_server_name = document.getElementById("new_server_name_" + server_id.toString()).value;
-                var payload = {
-                    "server_id" : server_id.toString(),
-                    "server_name" : new_server_name
-                };
-
-                dispute_post("/rename_server", payload);
-            }
+            <input type="image" name="display_new_server_form" src="/file/display_new_server_form_image" class="server_picture_small" onclick="display_server_creation_form()">
             
-            function dispute_post(api_target, api_payload)
-            {
-                var xhr = new XMLHttpRequest();
-                xhr.open("POST", api_target, true);
-                xhr.setRequestHeader('Content-Type', 'application/json');
-                xhr.send(JSON.stringify(api_payload));
-            }
+            {% for server in attributes["servers"] %}
 
-            function remove_server(server_id)
-            {
-                var payload = {
-                    "server_id" : server_id
-                };
+                <input type="image" id="miniature_server_{{server["id"]}}" src="/file/{{server["image_token"]}}" onclick="server_tab_clicked({{server["id"]}})" class="server_picture_small">
 
-                dispute_post("/remove_server", payload);
-            }
+            {% endfor %}
 
-            function create_channel(server_id)
-            {
-                var channel_name = document.getElementById("creation_channel_name_" + server_id.toString()).value
-                var payload = {
-                    "server_id" : server_id,
-                    "channel_name" : channel_name
-                };
+        </div>
 
-                dispute_post("/create_channel", payload);
-            }
+		<div id="main_window" class="main_window">
 
-            function rename_channel(channel_id)
-            {
-                var channel_name = document.getElementById("new_channel_name_" + channel_id.toString()).value
-                var payload = {
-                    "channel_id" : channel_id,
-                    "channel_name" : channel_name
-                };
+            <div id="server_creation_form" class="server_creation_form">
+                <p class="generic_bold_police">Créer un serveur : </p>
 
-                dispute_post("/rename_channel", payload);
-            }
+                <p id = "creation_server_name_label">Nom du nouveau serveur</p>
+                <p><input id = "creation_server_name" type = 'text'/></p>
 
-            function remove_channel(channel_id)
-            {
-                var payload = {
-                    "channel_id" : channel_id
-                };
+                <p><input type = 'button' value = 'Créer le serveur' onclick="create_server();"/></p>
+            </div>
 
-                dispute_post("/remove_channel", payload);
-            }
+            <div id="friend_list" class="channel_tab">
 
-        </script>
+                <div onclick="test()">
+                    <p class="add_new_friend">ADD NEW FRIEND</p> 
+                </div>
 
-		<div id="server_tab" class="dev">
-            <p>Mes serveurs :</p>
+                <div class="line_tab2"></div>
+    
+                <div id="real_friend_list">
+                {% for friend in attributes["friends"] %}
+                <div id="friend_{{friend["id"]}}" class="div_friend_list">
+                    <div class="div_friend_picture">
+                        <img src={{"/file/" + friend["image_token"]}} class="picture_friend_list">
+                    </div>
+                    <div class="div_friend_name">
+                        <p class="name_friend_list">{{ friend["name"] }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+                </div>
+
+                <div class="dumb_bottom_div">
+
+                    <div class="dumb_bottom_line"></div>
+
+                    <div class="dumb_bottom_picture_div">
+                        <img src={{"/file/" + attributes["user"]["picture_token"]}} class="dumb_bottom_picture">
+                    </div>
+                    <div class="dumb_bottom_name_div">
+                        <p class="dumb_bottom_name">{{attributes["user"]["name"]}}#{{attributes["user"]["discriminant"]}}</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <div id="search_friend_form" class="friend_research_div">
+                <p>Chercher des amis : </p>
+    
+                <p>Nom</p>
+                <input type="text" name="friend_search_name" id="friend_search_name">
+    
+                <p>Discriminant</p>
+                <input type="text" name="friend_search_discriminant" id="friend_search_discriminant">
+    
+                <p></p>
+                <input type="button" name="frien_search_button" onclick="search_friend()" value="Rechercher" class="generic_dispute_button">
+    
+                <div id="friend_search_list" class="div_friend_search_list">
+                    
+                </div>
+            </div>
+
+            <div id="friend_request_list" class="friend_request_list">
+
+                <div class="div_friend_request">
+                    <p>Demandes de contact reçues :</p>
+                </div>
+                
+                {% for friend_request in attributes["pending_friend_requests"] %}
+
+                <div class="div_friend_request" id="div_friend_request_{{friend_request["id"]}}">
+                    <div class="div_friend_request_image">
+                        <img src={{"/file/" + friend_request["image_token"]}} class="friend_request_image">
+                    </div>
+                    <div class="div_friend_request_name">
+                        <p class="friend_request_name">{{friend_request["name"]}}</p>
+                    </div>
+                    <div class="div_friend_request_button">
+                        <input type="image" src="/file/button_accept" onclick="accept_friend({{friend_request["id"]}})" class="friend_request_button">
+                    </div>
+                    <div class="div_friend_request_button">
+                        <input type="image" src="/file/button_deny" onclick="deny_friend({{friend_request["id"]}})" class="friend_request_button">
+                    </div>
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+            <div id="change_profilepicture_form" class="dev">
+                <form action="/change_profilepicture" method="post" enctype="multipart/form-data">
+
+                    <h3> Select image to upload: </h3>
+    
+                    <input type="file" name="profil_picture" id="profil_picture">
+    
+                    <input type="submit" value="Upload Image" name="submit">
+
+                </form>
+            </div>
 
             {% for server in attributes["servers"] %}
-                <div id="server_{{server["id"]}}" class="dev" server_id="{{server["id"]}}">
 
-                    <p id="server_name_{{server["id"]}}">{{ server["name"] }}</p>
-
-                    <p><input id="new_server_name_{{server["id"]}}" type="text" name="server_name" value={{server["name"]}}/></p>
-
-                    <p><input type="button" value="Renommer" onclick="rename_server({{server["id"]}});"></p>
+            <div id="server_main_{{server["id"]}}" server_id="{{server["id"]}}">
+                
+                <div id="channel_tab_{{server["id"]}}" class="channel_tab">
                     
-                    <p><input type="button" value="Supprimer" onclick="remove_server({{server["id"]}});"></p>
+                   <div class="div_server_name">
+                       
+                        <input id="server_name_{{server["id"]}}" type="text" name="server_name" value="{{server["name"]}}" class="server_editable_label" />
 
-                    <p><input id="creation_channel_name_{{server["id"]}}" type="text" name = 'channel_name'/></p>
-        
-                    <p><input type="button" value = 'Créer le canal' onclick="create_channel({{server["id"]}});" /></p>
-
-
-                    {% for channel in server["channels"] %}
-
-                    <div id="channel_{{channel["id"]}}" channel_id="{{channel["id"]}}">
-
-                        <p id="channel_name_{{channel["id"]}}">{{ channel["name"] }}</p>
+                        <script type="text/javascript">
+                            
+                            var element = document.getElementById("server_name_{{server["id"]}}")
     
-                        <p><input id="new_channel_name_{{channel["id"]}}" type = 'text' name = 'channel_name' required/></p>
-            
-                        <p><input type='button' value='Renommer le canal' onclick="rename_channel({{channel["id"]}})" /></p>
+                            element.addEventListener("keyup", function(event) {
+    
+                                event.preventDefault();
 
-                        <p><input type='button' value='Supprimer le canal' onclick="remove_channel({{channel["id"]}})" /></p>
-
-                        <div class="dev">
-
-                            {% for message in channel["last_messages"] %}
-
-                            <div class="dev">
-                                <img src={{"/file/" + message["image_token"] }} class="profil_picture_small">
-                                <p> {{ message["name"] }} </p>
-                                <p> {{ message["content"] }} </p>
-                            </div>
-
-                            {% endfor %}
-
-                            <div class="dev">
-                                
-                                <form action="/post_message" method="POST">
-
-                                    <input type="hidden" name="channel_id" value = {{ channel["id"] }}>
-
-                                    <input type="text" name="content">
-
-                                    <input type="submit" value="Envoyer">
+                                if (event.keyCode === 13) {
+    
+                                    rename_server({{server["id"]}});
+                                    document.activeElement.blur();
                                     
-                                </form>
+                                }
+                            }); 
+    
+                        </script>
 
+                   </div>
+
+                   <div id="channel_list_{{server["id"]}}">
+
+                        <div class="div_channel_list">
+                            <input type="button"  value="+" name="" onclick="add_channel_form_clicked({{server["id"]}})" class="generic_dispute_button">
+                        </div>
+                       
+                        {% for channel in server["channels"] %}
+
+                            <div id="div_channel_list_{{channel["id"]}}" class="div_channel_list" onclick="channel_tab_clicked({{channel["id"]}})">
+                                <p id="div_channel_name_list_{{channel["id"]}}" class="div_channel_name_list">#{{channel["name"]}}</p>
                             </div>
 
+                        {% endfor %}
+
+                   </div>
+
+                   <div class="dumb_bottom_div">
+
+                        <div class="dumb_bottom_line"></div>
+
+                        <div class="dumb_bottom_picture_div">
+                            <img src={{"/file/" + attributes["user"]["picture_token"]}} class="dumb_bottom_picture">
                         </div>
+                        <div class="dumb_bottom_name_div">
+                            <p class="dumb_bottom_name">{{attributes["user"]["name"]}}#{{attributes["user"]["discriminant"]}}</p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div id="server_body_{{server["id"]}}" class="generic_remain" server_id="{{server["id"]}}">
+
+                    <div id="server_user_list_{{server["id"]}}" class="div_server_user_list">
+
+                        {% for user in server["users"] %}
+
+                        <div id="div_user_list_{{user["id"]}}" class="div_user_list">
+                            <div class="div_user_list_picture">
+                                <img src={{"/file/" + user["image_token"]}} class="picture_user_list_connected">
+                            </div>
+                            <div class="div_user_list_name">
+                                <p class="name_user_list">{{user["name"]}}</p>
+                            </div>
+                        </div>
+
+                        {% endfor %}
+                        
+                    </div>
+
+                    <div id="channel_container_{{server["id"]}}" class="generic_remain">
+
+                        <div id="creation_channel_form_{{server["id"]}}" class="channel_creation_form">
+
+                            <p>Nom du canal : </p>
+
+                            <p><input id="creation_channel_name_{{server["id"]}}" type="text" name = 'channel_name'/></p>
+        
+                            <p><input type="button" value = 'Créer le canal' onclick="create_channel({{server["id"]}});" class="generic_dispute_button"/></p>
+                        </div>
+
+                        <div id="configuration_server_{{server["id"]}}">
+                            <p>Configuration du serveur : </p>
+                            <div>
+                                <input type="text" name="server_token" value="{{server["token"]}}" class="server_editable_label">
+                            </div>
+                        </div>
+
+                        {% for channel in server["channels"] %}
+
+                            <div id="channel_body_{{channel["id"]}}" channel_id="{{channel["id"]}}" server_id="{{server["id"]}}">
+        
+                                <div class=div_upper>
+        
+                                    <input id="channel_name_{{channel["id"]}}" type="text" name="server_name" value="{{channel["name"]}}" class="channel_editable_label" />
+        
+                                    <script type="text/javascript">
+                                    
+                                        var element = document.getElementById("channel_name_{{channel["id"]}}")
+                
+                                        element.addEventListener("keyup", function(event) {
+                
+                                            event.preventDefault();
+
+                                            if (event.keyCode === 13) {
+                
+                                                rename_channel({{channel["id"]}});
+                                                document.activeElement.blur();
+                                            }
+                                        }); 
+            
+                                     </script>
+        
+                                    <input type='button' value='-' onclick="remove_channel({{channel["id"]}})" class="channel_remove_button"/>
+        
+                                </div>
+        
+                                <div id="channel_message_body_{{channel["id"]}}" class="generic_remain">
+
+                                    <div id="channel_message_box_{{channel["id"]}}" class="message_box">
+                                        {% for message in channel["last_messages"] %}
+        
+                                        <div id="message_{{ message["id"] }}" class="div_message">
+                                            <div>
+                                                <div class="div_message_profile_picture">
+                                                    <img src={{"/file/" + message["image_token"] }} class="message_profile_picture">
+                                                </div>
+                                                <div class="div_message_user_name">
+                                                    <p class="message_user_name"> {{ message["name"] }} </p>
+                                                </div>
+                                                <div class="div_message_timestamp">
+                                                    <p class="message_timestamp"> {{ message["timestamp"] }} </p>
+                                                </div>
+                                            </div>
+                                            <div class="div_message_content">
+                                                <p class="message_content"> {{ message["content"] }} </p>
+                                            </div>
+                                        </div>
+        
+                                        {% endfor %}
+                                    </div>
+        
+                                    <div class="message_sending_box">
+        
+                                        <input id="new_message_content_channel_{{channel["id"]}}" type="text" name="content">
+        
+                                        <input type="button" value="Envoyer" onclick="post_message({{channel["id"]}})" class="generic_dispute_button">
+        
+                                    </div>
+        
+                                </div>
+        
+                            </div>
+
+                        {% endfor %}
 
                     </div>
 
-                    {% endfor %}
-
                 </div>
+
+            </div>
+
             {% endfor %}
+
 		</div>
-
-        <div class="dev">
-            <p>Mes amis :</p>
-
-            {% for friend in attributes["friends"] %}
-                <img src={{"/file/" + friend["image_token"]}} class="profil_picture_small">
-                <p>{{ friend["name"] }}</p>
-            {% endfor %}
-        </div>
-
-        <div class="dev">
-            <form action="/change_profilepicture" method="post" enctype="multipart/form-data">
-
-                <h3> Select image to upload: </h3>
-
-                <input type="file" name="profil_picture" id="profil_picture">
-
-                <input type="submit" value="Upload Image" name="submit">
-
-            </form>
-        </div>
 
 	</body>
 </html>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
-
-<script type="text/javascript" charset="utf-8">
-    var socket = io();
-
-    socket.on('connect', function() {
-        socket.emit('connected');
-    });
-
-    socket.on('test', function() {
-        console.log('TEST')
-    });
-
-    socket.on('new_message', function(data) {
-        console.log(data)
-        console.log('LOG')
-    });
-
-    /*var xhr = new XMLHttpRequest();
-    xhr.open("POST", '/post_message', true);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    data = JSON.stringify({"channel_id": "1", "content": "Coucou les copains"});
-    xhr.send(data);
-
-    function dispute_post(api_target, api_payload)
-    {
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", 'api_target', true);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.send(api_payload);
-    }*/
-
-</script>
+<script src="https://code.jquery.com/jquery-3.5.0.js"></script>
+<script src="../static/js/home.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>

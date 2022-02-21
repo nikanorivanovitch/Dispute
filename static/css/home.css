@@ -1,12 +1,534 @@
+body 
+{
+    margin: 0px;
+    background: rgb(60,60,60);
+}
+
 .dev
 {
     outline: 8px ridge rgba(170, 50, 220, .6);
-    border-radius: 2rem;    
+    border-radius: 2rem;
+    overflow: hidden;    
 }
 
 .profil_picture_small
 {
-    height: 100px;
-    width: 100px;
+    height: 50px;
+    width: 50px;
     border-radius: 50%;
+}
+
+.picture_friend_list
+{
+    height: 50px;
+    width: 50px;
+    margin: 10px;
+    border-radius: 50%;
+}
+
+.name_friend_list
+{
+    padding-top: 10px;
+    vertical-align: center;
+}
+
+.div_friend_list
+{
+    height: 70px;
+    width: 200px;
+    white-space: nowrap;
+}
+
+.div_friend_picture
+{
+    height: 70px;
+    width: 70px;
+    float: left;
+}
+
+.div_friend_name
+{
+    height: 70px;
+    width: 130px;
+    float: left;
+}
+
+.line_tab2
+{
+    margin: 8px;
+    border-bottom: 1px solid black;
+}
+
+.server_picture_small
+{
+    height: 60px;
+    width: 60px;
+    border-radius: 30%;
+    margin: 5px;
+}
+
+.server_tab
+{
+    height: 100%;
+    width: 80px;
+    float: left;
+    vertical-align: middle;
+    background-color: rgb(20, 20, 20);
+    overflow: hidden;
+}
+
+.main_window
+{
+
+}
+
+.generic_remain
+{
+    overflow: hidden;
+}
+
+.channel_tab
+{
+	height: 100%;
+    width: 200px;
+    float: left;
+    vertical-align: middle;
+    background-color: rgb(40, 40, 40);
+}
+
+.add_new_friend
+{
+    text-align: center;
+}
+
+.channel_open_button
+{
+    background-color: transparent;
+    background-repeat: no-repeat;
+    border: none;
+    cursor: pointer;
+    overflow: hidden;
+    float: left;
+    outline: none;
+}
+
+.channel_remove_button
+{
+    margin: 10px;
+    float: right;
+}
+
+.div_server_name
+{
+    height: 40px;
+    vertical-align: center;
+}
+
+.div_server_user_list
+{
+    width: 200px;
+    height: 100%;
+    float: right;
+    overflow: hidden;
+    background-color: rgb(40, 40, 40);
+}
+
+.div_upper
+{
+    height: 40px;
+}
+
+.user_tab
+{
+    height: 100%;
+    width: 150px;
+    float: right;
+    vertical-align: middle
+}
+
+.server_editable_label
+{
+    background: rgba(0, 0, 0, 0);
+    border: none;
+    vertical-align: middle;
+    width: auto;
+    margin: 10px;
+    color: rgb(230, 230, 230);
+    font-family: "Lucida Console", "Courier New", monospace;
+}
+
+.channel_editable_label
+{
+    background: rgba(0, 0, 0, 0);
+    border: none;
+    vertical-align: middle;
+    margin: 10px;
+    color: rgb(230, 230, 230);
+    font-family: "Lucida Console", "Courier New", monospace;
+}
+
+.message_box
+{
+    width: auto;
+    height: calc(100vh - 150px);
+    overflow-y: auto;
+}
+
+.message_sending_box
+{
+    height: 100px;
+    position: fixed;
+    bottom: 5px;
+}
+
+.add_button
+{
+    width: 20px;
+    height: 20px;
+}
+
+.div_channel_list
+{
+    width: 200px;
+    height: 20px;
+}
+
+.div_channel_name_list
+{
+    margin: 10px;
+}
+
+.div_user_list
+{
+    width: 200px;
+    height: 70px;
+    white-space: nowrap;
+}
+
+.div_user_list_picture
+{
+    width: 70px;
+    height: 70px;
+    float: left;
+}
+
+.div_user_list_name
+{
+    width: 130px;
+    height: 70px;
+    float: left;
+}
+
+.picture_user_list_connected
+{
+    height: 42px;
+    width: 42px;
+    margin: 5px;
+    border-radius: 50%;
+    background-color: rgb(50,255,50);
+    padding: 4px;
+    border-radius: 50%;
+}
+
+.picture_user_list_disconnected
+{
+    height: 42px;
+    width: 42px;
+    margin: 5px;
+    border-radius: 50%;
+    background-color: rgb(255,50,50);
+    padding: 4px;
+    border-radius: 50%;
+}
+
+.name_user_list
+{
+    vertical-align: vertical;
+}
+
+.dumb_bottom_div
+{
+    width: 200;
+    height: 70;
+    position: absolute; 
+    bottom: 15;
+}
+
+.dumb_bottom_picture
+{
+    height: 30px;
+    width: 30px;
+    margin: 5px;
+    border-radius: 50%;
+}
+
+.dumb_bottom_name
+{
+    margin: 10px;
+    vertical-align: vertical;
+}
+
+.dumb_bottom_picture_div
+{
+    width: 40px;
+    height: 40px;
+    float: left;
+}
+
+.dumb_bottom_name_div
+{
+    width: 160px;
+    height: 40px;
+    float: left;
+}
+
+.dumb_bottom_line
+{
+    margin: 8px;
+    border-bottom: 1px solid black;
+}
+
+.friend_research_div
+{
+    padding-top: 20px;
+    padding-left: 300px;
+    width: auto;
+    height: auto;
+}
+
+.server_creation_form
+{
+    padding-top: 20px;
+    padding-left: 100px;
+    width: auto;
+    height: auto;
+}
+
+.channel_creation_form
+{
+    padding-top: 20px;
+    padding-left: 20px;
+    width: auto;
+    height: auto;
+}
+
+p
+{
+    color: rgb(230, 230, 230);
+    font-family: "Lucida Console", "Courier New", monospace;
+}
+
+.message_police
+{
+    color: rgb(230, 230, 230);
+    font-family: "Lucida Console", "Courier New", monospace;
+}
+
+.generic_dispute_button
+{
+    background: rgb(30, 30, 30);
+    border-color: rgb(30, 30, 30);
+    color: rgb(230, 230, 230);
+    font-family: "Lucida Console", "Courier New", monospace;
+    border-radius: 10%;
+}
+
+.message_user_name
+{
+    color: rgb(230, 230, 230);
+    font-family: "Lucida Console", "Courier New", monospace;
+    padding: 0px;
+    margin: 0px;
+    padding-left: 8px;
+    padding-top: 9px;
+    font-weight: bold;
+}
+
+.message_profile_picture
+{
+    height: 25px;
+    width: 25px;
+    margin: 5px;
+    border-radius: 50%;
+}
+
+.message_timestamp
+{
+    color: rgb(230, 230, 230);
+    font-family: "Lucida Console", "Courier New", monospace;
+    padding: 0px;
+    margin: 0px;
+    padding-left: 15px;
+    padding-top: 9px;
+    font-style: italic;
+    font-weight: lighter;
+    font-size: 14px;
+}
+
+.message_content
+{
+    color: rgb(230, 230, 230);
+    font-family: "Lucida Console", "Courier New", monospace;
+    font-weight: lighter;
+    padding-left: 20px;
+    padding-top: 10px;
+    font-size: 12px;
+}
+
+.div_message_profile_picture
+{
+    width: 35px;
+    height: 35px;
+    float: left;
+}
+
+.div_message_user_name
+{
+    width: auto;
+    height: auto;
+    float: left;
+}
+
+.div_message_timestamp
+{
+    width: auto;
+    height: auto;
+    float: left;
+}
+
+.div_message_content
+{
+    float: inherit;
+    width: auto;
+    height: auto;
+    clear: both;
+    padding-left: 
+}
+
+.div_message
+{
+    width: inherit;
+    height: auto;
+}
+
+.div_friend_suggestion
+{
+    padding-top: 5px;
+    height: 50px;
+}
+
+.div_friend_suggestion_name
+{
+    width: auto;
+    height: auto;
+    float: left;
+}
+
+.div_friend_suggestion_image
+{
+    width: auto;
+    height: auto;
+    float: left;
+}
+
+.div_friend_suggestion_button_add
+{
+    width: auto;
+    height: auto;
+    float: left;
+}
+
+.friend_suggestion_name
+{
+
+}
+
+.friend_suggestion_image
+{
+    height: 30px;
+    width: 30px;
+    margin: 10px;
+    border-radius: 50%;
+}
+
+.friend_suggestion_button_add
+{
+    height: 30px;
+    width: 30px;
+    margin: 10px;
+}
+
+.generic_line
+{
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid black;
+    clear: both;
+}
+
+.div_friend_search_list
+{
+    width: auto;
+    height: auto;
+}
+
+.div_friend_request
+{
+    width: auto;
+    height: 50px;
+}
+
+.div_friend_request_image
+{
+    width: auto;
+    height: auto;
+    float: left;
+}
+
+.div_friend_request_name
+{
+    width: auto;
+    height: auto;
+    float: left;
+}
+
+.div_friend_request_button
+{
+    width: auto;
+    height: auto;
+    float: left;
+}
+
+.friend_request_image
+{
+    height: 30px;
+    width: 30px;
+    margin: 10px;
+    border-radius: 50%;
+}
+
+.friend_request_name
+{
+    height: auto;
+    width: auto;
+}
+
+.friend_request_button
+{
+    height: 20px;
+    width: 20px;
+    margin: 15px;
+    border-radius: 50%;
+}
+
+.friend_request_list
+{
+    padding-top: 10px;
+    padding-left: 300px;
+}
+
+.generic_title
+{
+    position: absolute;
+    left: 300px;
 }

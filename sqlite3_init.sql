@@ -10,7 +10,9 @@ CREATE TABLE IF NOT EXISTS user(
 CREATE TABLE IF NOT EXISTS server(
                                     server_id INTEGER PRIMARY KEY AUTOINCREMENT, 
                                     server_name VARCHAR(100), 
-                                    server_creator_id INT NOT NULL
+                                    server_creator_id INT NOT NULL,
+                                    server_picture_token VARCHAR(64),
+                                    server_token VARCHAR(64)
                                 );
 
 CREATE TABLE IF NOT EXISTS channel(

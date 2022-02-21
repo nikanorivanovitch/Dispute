@@ -3,6 +3,7 @@ import os
 import hashlib
 import random
 import json
+from datetime import datetime
 
 def NewToken():
 
@@ -67,6 +68,7 @@ class SessionHandler:
 
     def __init__(self):
         self.Sessions = {}
+        self.InvertSessions = {}
 
     def OpenSession(self, User):
 
@@ -79,12 +81,14 @@ class SessionHandler:
 
         NT = NewToken()
         self.Sessions[NT] = User
+        self.InvertSessions[User.id] = NT
 
         return NT
 
     def CloseSession(self, Token):
 
         if(Token in self.Sessions):
+            self.InvertSessions.pop(self.Sessions[Token].id)
             self.Sessions.pop(Token)
             return True
 
@@ -93,6 +97,17 @@ class SessionHandler:
     def IsValidSession(self, Token):
 
         return (Token in self.Sessions)
+
+    def IsUserConnected(self, user_id):
+
+        print(user_id)
+        print(self.InvertSessions)
+
+        if(user_id in self.InvertSessions):
+
+            return self.InvertSessions[user_id]
+            
+        return False
 
 class User:
 
@@ -113,6 +128,8 @@ class Server:
         self.name=None
         self.channels=None
         self.creator=None
+        self.picture_token='default-server-picture'
+        self.token=None
 
 class Channel:
 
@@ -230,6 +247,7 @@ class DatabaseHandler:
             result=result[0]
             user.id = result[0]
             user.name = result[1]
+            user.discriminant = result[4]
             user.picture_token = result[5]
             return user
 
@@ -237,17 +255,35 @@ class DatabaseHandler:
 
     def GetUserFromId(self, user_id):
 
+        print(user_id)
+
         request = "SELECT * FROM user WHERE user_id = (?);"
-        self.cursor.execute(request, (sql_hash))
+        self.cursor.execute(request, (user_id,))
 
         result = self.cursor.fetchall()
 
         if(len(result)==0):
             return None
+
         if(len(result)>1):
             print("DATABASE ERROR : Il existe plusieurs utilisateurs d'ID " + str(user_id))
+            
         else:
             return result[0]
+
+    def GetUserApparenceFromId(self, user_id):
+
+        request = "SELECT * FROM user WHERE user_id=(?);"
+        result = self.cursor.execute(request, (user_id,)).fetchall()
+
+        if(len(result)==1):
+        
+            line = result[0]
+            output = {"id" : line[0], "name" : line[1], "picture_token" : line[5]}
+
+            return output
+
+        return None
 
     def GetServersOfUser(self, user_id):
 
@@ -261,8 +297,10 @@ class DatabaseHandler:
 
         for line in result:
 
-            channel_dictionnary = self.GetChannelsOfServer(line[0]) 
-            output.append({"id" : line[0], "name" : line[1], "image" : None, "channels" : channel_dictionnary})
+            channel_dictionnary = self.GetChannelsOfServer(line[0])
+            output.append({"id" : line[0], "name" : line[1], "image_token" : line[3], "channels" : channel_dictionnary, "users" : self.GetUserApparenceOfServer(line[0]), "token" : line[4]})
+
+        print(output)
 
         return output
 
@@ -305,14 +343,81 @@ class DatabaseHandler:
 
         return output
 
+    def GetUserOfServerFromToken(self, server_token):
+
+        request = "SELECT user_id FROM membership WHERE server_id IN (SELECT server_id FROM server WHERE server_token = (?));"
+        result = self.cursor.execute(request, (server_token,)).fetchall()
+
+        output = []
+
+        for line in result:
+            output.append(line[0])
+
+        return output
+
+    def GetServerIdFromToken(self, server_token):
+
+        request = "SELECT server_id FROM server WHERE server_token=(?);"
+        result = self.cursor.execute(request, (server_token,)).fetchall()
+
+        if(len(result)!=1):
+            return None
+
+        return int(result[0][0])
+
+    def GetUserApparenceOfServer(self, server_id):
+
+        request = "SELECT * FROM user WHERE user_id IN (SELECT user_id FROM membership WHERE server_id = (?));"
+        result = self.cursor.execute(request, (server_id,)).fetchall()
+
+        output = []
+
+        for line in result:
+            output.append({"id" : line[0], "name" : line[1], "image_token" : line[5], "discriminant" : line[4]})
+
+        return output
+
+
+    def GetServerOfChannel(self, channel_id):
+
+        print(channel_id)
+        print(type(channel_id))
+
+        request = "SELECT channel_server_id FROM channel WHERE channel_id = (?);"
+        result = self.cursor.execute(request, (channel_id,)).fetchall()
+
+        if(len(result)==1):
+            return result[0][0]
+
+        return False
+
     ###########
     # Serveur #
     ###########
 
+    def GetServerToken(self):
+
+        exitloop = False
+
+        while(not exitloop):
+
+            token = NewFileToken()
+
+            request = "SELECT * FROM server WHERE server_token=(?)"
+            result = self.cursor.execute(request, (token,)).fetchall()
+
+            if(len(result)==0):
+
+                exitloop = True
+
+        return token
+
     def CreateServer(self, server):
 
-        request = "INSERT INTO server(server_id, server_name, server_creator_id) VALUES (?, ?, ?);"
-        self.cursor.execute(request, (server.id, server.name, server.creator.id));
+        server.token = self.GetServerToken()
+
+        request = "INSERT INTO server(server_id, server_name, server_creator_id, server_picture_token, server_token) VALUES (?, ?, ?, ?, ?);"
+        self.cursor.execute(request, (server.id, server.name, server.creator.id, server.picture_token, server.token));
 
         server.id = self.GetIncrementOfTable("server")
 
@@ -429,7 +534,8 @@ class DatabaseHandler:
         output = []
 
         for message in messages:
-            output.append({ "id" : message[0], "timestamp" : message[1] , "name" : message[6], "image_token" : message[10], "content" : message[3]})
+            print(message[1])
+            output.append({ "id" : message[0], "timestamp" : str(datetime.fromtimestamp(int(message[1]))).replace(' ','@').replace('-','/') , "name" : message[6], "image_token" : message[10], "content" : message[3]})
 
         return output
 
@@ -439,6 +545,29 @@ class DatabaseHandler:
     #############
 
     def AddUserToServer(self, user_id, server_id):
+
+        request = "SELECT * FROM membership WHERE user_id = (?) AND server_id = (?);"
+        self.cursor.execute(request, (user_id, server_id))
+
+        result = self.cursor.fetchall()
+
+        if(len(result)!=0):
+            return False
+
+        request = "INSERT INTO membership(user_id, server_id) VALUES (?, ?);"
+        self.cursor.execute(request, (user_id, server_id))
+
+        return True
+
+    def AddUserToServerFromToken(self, user_id, server_token):
+
+        request = "SELECT * FROM server WHERE server_token=(?);"
+        result = self.cursor.execute(request, (server_token,)).fetchall()
+
+        if(len(result)!=1):
+            return False
+
+        server_id = result[0][0]
 
         request = "SELECT * FROM membership WHERE user_id = (?) AND server_id = (?);"
         self.cursor.execute(request, (user_id, server_id))
@@ -466,7 +595,7 @@ class DatabaseHandler:
         self.cursor.execute(request, (remover_id, removed_id))
         self.cursor.execute(request, (removed_id, remover_id))
 
-    def DoesFriendShipExists(self, friend1_id, friend2_id):
+    def DoesFriendshipExists(self, friend1_id, friend2_id):
 
         request = "SELECT * FROM friendship WHERE friend1_id = (?) AND friend2_id = (?);"
         
@@ -483,20 +612,55 @@ class DatabaseHandler:
         request = "SELECT * FROM pending_friend_request WHERE sender_id = (?) AND receiver_id = (?);"
 
         if(len(self.cursor.execute(request, (sender_id, receiver_id)).fetchall())==1):
-            return 1
-
-        if(len(self.cursor.execute(request, (receiver_id, sender_id)).fetchall())==1):
-            return 2
+            return True
 
         return False
 
     def AddFriendshipRequest(self, user_sender_id, user_receiver_id):
 
-        if(not DoesFriendshipExists(user_sender_id, user_receiver_id)):
+        if(not self.DoesFriendshipExists(user_sender_id, user_receiver_id) and not self.DoesFriendshipRequestExists(user_sender_id, user_receiver_id)):
 
             request = "INSERT INTO pending_friend_request(sender_id, receiver_id) VALUES (?,?);"
 
             self.cursor.execute(request, (user_sender_id, user_receiver_id))
+
+    def RemoveFriendshipRequest(self, user_sender_id, user_receiver_id):
+
+        request = "DELETE FROM pending_friend_request WHERE sender_id=(?) AND receiver_id=(?);"
+        self.cursor.execute(request, (user_sender_id, user_receiver_id))
+        self.cursor.execute(request, (user_receiver_id, user_sender_id))
+
+    def GetPotentialFriend(self, searcher_id, friend_name, friend_discriminant):
+
+        print("GET POTENTIAL FRIEND")
+        print(friend_name, friend_discriminant)
+
+        request = "SELECT * FROM user WHERE user_name LIKE (?) AND user_discriminant = (?) AND user_id NOT IN (SELECT friend1_id FROM friendship WHERE friend2_id = (?)) AND user_id NOT IN (SELECT friend2_id FROM friendship WHERE friend1_id = (?));"
+        print(request)
+        result = self.cursor.execute(request, ('%' + friend_name + '%', friend_discriminant, searcher_id, searcher_id)).fetchall()
+
+        output = []
+
+        print(result)
+
+        for line in result:
+
+            output.append({"id" : line[0], "name" : line[1], "image_token" : line[5]})
+
+        return output
+
+    def GetFriendRequestsOfUser(self, user_id):
+
+        request = "SELECT * FROM user WHERE user_id IN (SELECT sender_id FROM pending_friend_request WHERE receiver_id=(?));"
+        result = self.cursor.execute(request, (user_id,))
+
+        output = []
+
+        for line in result:
+
+            output.append({"id" : line[0], "name" : line[1], "image_token" : line[5]})
+
+        return output
 
     ###########
     # Fichier #
@@ -513,7 +677,6 @@ class DatabaseHandler:
             return True
 
         return False
-
 
     def AddTokenFile(self, FileToken, FileExtension):
 
