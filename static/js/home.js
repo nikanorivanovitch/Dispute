@@ -149,7 +149,7 @@ function hide_all_tabs()
     var ElementToFind=document.getElementById("friend_request_list")
     ElementToFind.hidden=true
 
-    var ElementToFind=document.getElementById("change_profilepicture_form")
+    var ElementToFind=document.getElementById("change_profilepicture_div")
     ElementToFind.hidden=true
 }
 
@@ -172,6 +172,9 @@ function display_friend_window()
     ElementToFind.hidden=false
 
     var ElementToFind=document.getElementById("friend_request_list")
+    ElementToFind.hidden=false
+
+    var ElementToFind=document.getElementById("change_profilepicture_div")
     ElementToFind.hidden=false
 }
 
@@ -209,6 +212,18 @@ function hide_all_channels_tabs()
     for (var i = 0; i < ThingsToHide.length; i++) {
         ThingsToHide[i].hidden=true
     }
+}
+
+function change_profile_picture()
+{
+    var photo = document.getElementById("profil_picture_file").files[0]
+
+    let req = new XMLHttpRequest();
+    let formData = new FormData();
+    
+    formData.append("profil_picture", photo);                                
+    req.open("POST", '/change_profilepicture');
+    req.send(formData);
 }
 
 var socket = io();
@@ -576,6 +591,26 @@ var socket = io();
         div_user.appendChild(div_name)
 
         server_user_list.appendChild(div_user)
+    });
+
+    socket.on('profil_picture_changed', function(data) {
+
+        console.log("profil_picture_changed : ",data);
+
+        var ThingsToChange = $('img[user_id="' + data["id"] + '"]')
+
+        console.log(ThingsToChange)
+
+        for (var i = 0; i < ThingsToChange.length; i++) {
+            ThingsToChange[i].setAttribute("src","/file/" + data["picture_token"])
+        }
+    });
+
+    socket.on('new_server', function(data) {
+
+        console.log("new_server : ",data);
+
+        location.reload()
     });
 
     hide_all_tabs();

@@ -253,6 +253,11 @@ class DatabaseHandler:
 
         return False
 
+    def ChangeProfilePictureOfUser(self, user_id, picture_token):
+
+        request = "UPDATE user SET user_picture_token = (?) WHERE user_id = (?);"
+        self.cursor.execute(request, (picture_token, user_id))
+
     def GetUserFromId(self, user_id):
 
         print(user_id)
@@ -327,7 +332,7 @@ class DatabaseHandler:
         output = []
 
         for line in result:
-            output.append({"name" : line[1], "image_token" : line[5]})
+            output.append({"id" : line[0], "name" : line[1], "image_token" : line[5]})
 
         return output
 
@@ -390,6 +395,28 @@ class DatabaseHandler:
             return result[0][0]
 
         return False
+
+    def GetRelativesOfUser(self, user_id):
+
+        print(self.GetFriendsOfUser(user_id))
+
+        relatives_id = [x["id"] for x in self.GetFriendsOfUser(user_id)]
+
+        print("FRIENDS : ",relatives_id)
+
+        servers_id = [x["id"] for x in self.GetServersOfUser(user_id)]
+
+        for server_id in servers_id:
+
+            users_id = self.GetUserOfServer(server_id)
+
+            for user_server_id in users_id:
+
+                if(not user_server_id in relatives_id and user_server_id != user_id):
+
+                    relatives_id.append(user_server_id)
+
+        return relatives_id
 
     ###########
     # Serveur #
@@ -535,7 +562,7 @@ class DatabaseHandler:
 
         for message in messages:
             print(message[1])
-            output.append({ "id" : message[0], "timestamp" : str(datetime.fromtimestamp(int(message[1]))).replace(' ','@').replace('-','/') , "name" : message[6], "image_token" : message[10], "content" : message[3]})
+            output.append({ "id" : message[0], "timestamp" : str(datetime.fromtimestamp(int(message[1]))).replace(' ','@').replace('-','/') ,"user_id" : message[5], "name" : message[6], "image_token" : message[10], "content" : message[3]})
 
         return output
 

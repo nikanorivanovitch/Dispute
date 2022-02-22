@@ -93,7 +93,7 @@ def URL_home():
             attributes = {}
             user = sh.Sessions[session['token']]
 
-            attributes['user'] = {'name' : user.name, 'discriminant' : user.discriminant, 'picture_token' : user.picture_token}
+            attributes['user'] = {'id' : user.id, 'name' : user.name, 'discriminant' : user.discriminant, 'picture_token' : user.picture_token}
             attributes['pending_friend_requests'] = db.GetFriendRequestsOfUser(user.id)
             attributes['servers'] = db.GetServersOfUser(user.id)
             attributes['friends'] = db.GetFriendsOfUser(user.id)
@@ -462,7 +462,19 @@ def URL_change_profilepicture():
                     db.AddTokenFile(filetoken, fileextension)
 
                     sh.Sessions[session['token']].picture_token = filetoken
-                    db.GetEntireTable('files')
+
+                    db.ChangeProfilePictureOfUser(sh.Sessions[session['token']].id, sh.Sessions[session['token']].picture_token)
+
+                    token = sh.IsUserConnected(sh.Sessions[session['token']].id)
+                    if(token):
+                        socketio.emit('profil_picture_changed', {'id' : sh.Sessions[session['token']].id, 'picture_token' : sh.Sessions[session['token']].picture_token}, room=token)
+
+                    for relative_id in db.GetRelativesOfUser(sh.Sessions[session['token']].id):
+
+                        token = sh.IsUserConnected(relative_id)
+                        if(token):
+                            socketio.emit('profil_picture_changed', {'id' : sh.Sessions[session['token']].id, 'picture_token' : sh.Sessions[session['token']].picture_token}, room=token)
+
 
     return redirect('/home')
 
@@ -512,6 +524,9 @@ def URL_file(FileToken):
 
         elif(FileToken == 'add_button'):
             return send_file('./static_pictures/' + 'add_button.png')
+
+        elif(FileToken == 'logo'):
+            return send_file('./static_pictures/' + 'logo.png')
 
         elif(db.DoesTokenFileExists(FileToken)):
 

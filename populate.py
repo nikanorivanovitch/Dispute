@@ -1,4 +1,9 @@
 from dispute_sql import *
+import os
+
+dir = './files/'
+for f in os.listdir(dir):
+    os.remove(os.path.join(dir, f))
 
 O = DatabaseHandler("database.db")
 O.GetEntireTable("user")

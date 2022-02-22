@@ -7,7 +7,7 @@
 
         <div id="server_tab" class="server_tab">
 
-            <input type="image" name="display_friend_window" src="/file/display_new_server_form_image" class="server_picture_small" onclick="display_friend_window()">
+            <input type="image" name="display_friend_window" src="/file/logo" class="server_picture_small" onclick="display_friend_window()">
 
             <input type="image" name="display_new_server_form" src="/file/display_new_server_form_image" class="server_picture_small" onclick="display_server_creation_form()">
             
@@ -42,7 +42,7 @@
                 {% for friend in attributes["friends"] %}
                 <div id="friend_{{friend["id"]}}" class="div_friend_list">
                     <div class="div_friend_picture">
-                        <img src={{"/file/" + friend["image_token"]}} class="picture_friend_list">
+                        <img src={{"/file/" + friend["image_token"]}} class="picture_friend_list" user_id="{{friend["id"]}}">
                     </div>
                     <div class="div_friend_name">
                         <p class="name_friend_list">{{ friend["name"] }}</p>
@@ -56,7 +56,7 @@
                     <div class="dumb_bottom_line"></div>
 
                     <div class="dumb_bottom_picture_div">
-                        <img src={{"/file/" + attributes["user"]["picture_token"]}} class="dumb_bottom_picture">
+                        <img src={{"/file/" + attributes["user"]["picture_token"]}} class="dumb_bottom_picture" user_id="{{attributes["user"]["id"]}}">
                     </div>
                     <div class="dumb_bottom_name_div">
                         <p class="dumb_bottom_name">{{attributes["user"]["name"]}}#{{attributes["user"]["discriminant"]}}</p>
@@ -109,14 +109,14 @@
 
             </div>
 
-            <div id="change_profilepicture_form" class="dev">
-                <form action="/change_profilepicture" method="post" enctype="multipart/form-data">
+            <div id="change_profilepicture_div" class="friend_request_list">
+                <form id="change_profilepicture_form" action="/change_profilepicture" method="post" enctype="multipart/form-data">
 
-                    <h3> Select image to upload: </h3>
+                    <p> Select image to upload: </p>
     
-                    <input type="file" name="profil_picture" id="profil_picture">
+                    <input id="profil_picture_file" type="file" name="profil_picture">
     
-                    <input type="submit" value="Upload Image" name="submit">
+                    <input type="button" value="Changer" name="Changer" onclick="change_profile_picture()">
 
                 </form>
             </div>
@@ -172,7 +172,7 @@
                         <div class="dumb_bottom_line"></div>
 
                         <div class="dumb_bottom_picture_div">
-                            <img src={{"/file/" + attributes["user"]["picture_token"]}} class="dumb_bottom_picture">
+                            <img src={{"/file/" + attributes["user"]["picture_token"]}} class="dumb_bottom_picture" user_id="{{attributes["user"]["id"]}}">
                         </div>
                         <div class="dumb_bottom_name_div">
                             <p class="dumb_bottom_name">{{attributes["user"]["name"]}}#{{attributes["user"]["discriminant"]}}</p>
@@ -189,7 +189,7 @@
 
                         <div id="div_user_list_{{user["id"]}}" class="div_user_list">
                             <div class="div_user_list_picture">
-                                <img src={{"/file/" + user["image_token"]}} class="picture_user_list_connected">
+                                <img src={{"/file/" + user["image_token"]}} class="picture_user_list_connected" user_id="{{user["id"]}}">
                             </div>
                             <div class="div_user_list_name">
                                 <p class="name_user_list">{{user["name"]}}</p>
@@ -255,7 +255,7 @@
                                         <div id="message_{{ message["id"] }}" class="div_message">
                                             <div>
                                                 <div class="div_message_profile_picture">
-                                                    <img src={{"/file/" + message["image_token"] }} class="message_profile_picture">
+                                                    <img src={{"/file/" + message["image_token"] }} class="message_profile_picture" user_id="{{message["user_id"]}}">
                                                 </div>
                                                 <div class="div_message_user_name">
                                                     <p class="message_user_name"> {{ message["name"] }} </p>
